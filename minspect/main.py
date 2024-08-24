@@ -4,6 +4,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 from rich.markdown import Markdown
+from io import StringIO
 
 from minspect.inspecting import inspect_library
 

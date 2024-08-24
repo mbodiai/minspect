@@ -1,5 +1,7 @@
 from click.testing import CliRunner
-from minspect.main import cli
+from minspect.main import cli, generate_markdown, generate_panels
+from rich.console import Console
+from io import StringIO
 
 def test_cli():
     runner = CliRunner()
