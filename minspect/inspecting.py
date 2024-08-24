@@ -214,6 +214,7 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True,
     return collected_info
 
 def inspect_library(module_or_class, depth, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
+    print(f"Debug: inspect_library called with module_or_class={module_or_class}, depth={depth}, signatures={signatures}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
     parts = module_or_class.split(".")
     module_name = parts[0]
     obj = None
@@ -225,7 +226,6 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
             if hasattr(obj, part):
                 obj = getattr(obj, part)
             else:
-                # If the attribute is not found, try to import it as a module
                 try:
                     obj = import_module(f"{obj.__name__}.{part}")
                 except ImportError:
@@ -243,6 +243,7 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
     
     try:
         result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+        print(f"Debug: get_info returned result: {result}")
         if not result:
             print("Debug: get_info returned empty result")
             raise ImportError(f"Unable to inspect module: {module_or_class}")

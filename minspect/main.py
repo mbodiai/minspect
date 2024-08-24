@@ -22,29 +22,30 @@ from minspect.inspecting import inspect_library
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     console = Console()
-    print(f"Debug: sigs={sigs}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
+    print(f"Debug: CLI called with module_or_class={module_or_class}, depth={depth}, sigs={sigs}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
     try:
         if all:
             sigs = docs = code = imports = True
-        print(f"Debug after all: sigs={sigs}, docs={docs}, code={code}, imports={imports}")
+        print(f"Debug: After 'all' option: sigs={sigs}, docs={docs}, code={code}, imports={imports}")
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
-        if result is None:
-            console.print(f"[bold red]Error: Module '{module_or_class}' not found.[/bold red]", style="red")
-            return 1
-        print(f"Debug: Result keys: {result.keys()}")
-    
-        if markdown:
-            md_content = generate_markdown(result, sigs, docs, code)
-            console.print(md_content)
+        print(f"Debug: Result from inspect_library: {result}")
+        
+        if result:
+            if markdown:
+                md_content = generate_markdown(result, sigs, docs, code)
+                console.print(md_content)
+            else:
+                generate_panels(console, result, sigs, docs, code)
+            return 0
         else:
-            generate_panels(console, result, sigs, docs, code)
+            console.print(f"[bold red]Error: No result returned for module '{module_or_class}'.[/bold red]", style="red")
+            return 1
     except ImportError as e:
         console.print(f"[bold red]Error importing module {module_or_class}:[/bold red] {str(e)}", style="red")
         return 1
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
-    return 0
 
 def generate_markdown(result, sigs, docs, code):
     md_content = "# Inspection Result\n\n"
