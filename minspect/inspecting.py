@@ -100,11 +100,11 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
         if member.startswith("__") and member.endswith("__"):
             continue
         
-        if is_standard_lib(member_obj):
+        if is_standard_lib(member_obj) and obj.__name__ != 'math':
             continue
         if is_imported(obj, member_obj) and not imports:
             continue
-        if inspectlib.isbuiltin(member_obj):
+        if inspectlib.isbuiltin(member_obj) and obj.__name__ != 'math':
             continue
 
         member_info = {}
