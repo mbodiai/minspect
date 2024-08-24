@@ -65,4 +65,10 @@ def test_cli_with_invalid_module():
     assert result.exit_code == 1
     assert "Error: Module 'nonexistent_module' not found." in result.output
 
+def test_cli_with_valid_module():
+    runner = CliRunner()
+    result = runner.invoke(cli, ["minspect"])
+    assert result.exit_code == 0
+    assert "minspect" in result.output
+
 # Add more tests for other combinations as needed

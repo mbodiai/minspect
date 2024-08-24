@@ -22,11 +22,13 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     console = Console()
     try:
+        if all:
+            sigs = docs = code = imports = True
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
     
         if markdown:
             md_content = generate_markdown(result, sigs, docs, code)
-            console.print(Markdown(md_content))
+            console.print(md_content)
         else:
             generate_panels(console, result, sigs, docs, code)
         return 0
@@ -36,6 +38,33 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
+
+def generate_markdown(result, sigs, docs, code):
+    md_content = "# Inspection Result\n\n"
+    for name, info in result.items():
+        md_content += f"## {name}\n\n"
+        md_content += f"**Type:** {info.get('type', 'N/A')}\n\n"
+        md_content += f"**Path:** {info.get('path', 'N/A')}\n\n"
+        if sigs and 'signature' in info:
+            md_content += f"**Signature:**\n```python\n{info['signature']}\n```\n\n"
+        if docs and 'docstring' in info:
+            md_content += f"**Docstring:**\n```\n{info['docstring']}\n```\n\n"
+        if code and 'code' in info:
+            md_content += f"**Source Code:**\n```python\n{info['code']}\n```\n\n"
+    return md_content
+
+def generate_panels(console, result, sigs, docs, code):
+    for name, info in result.items():
+        panel_content = f"[bold cyan]{name}[/bold cyan]\n\n"
+        panel_content += f"[bold]Type:[/bold] {info.get('type', 'N/A')}\n"
+        panel_content += f"[bold]Path:[/bold] {info.get('path', 'N/A')}\n"
+        if sigs and 'signature' in info:
+            panel_content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
+        if docs and 'docstring' in info:
+            panel_content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
+        if code and 'code' in info:
+            panel_content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
+        console.print(Panel(panel_content, expand=False))
 
 def generate_markdown(result, sigs, docs, code):
     md_content = "# Inspection Result\n\n"
