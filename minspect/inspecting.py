@@ -87,6 +87,21 @@ def get_full_name(obj):
         return "Unknown type"
 
 def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
+    """
+    Collect information about the given object and its members.
+
+    Args:
+        obj (Any): The object to inspect.
+        depth (int): The depth of inspection for nested objects.
+        current_depth (int): The current depth of inspection.
+        signatures (bool): Whether to include function signatures.
+        docs (bool): Whether to include docstrings.
+        code (bool): Whether to include source code.
+        imports (bool): Whether to include imported modules.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the collected information.
+    """
     if current_depth > depth:
         return {}
     
@@ -134,8 +149,8 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
 
         members_dict[member] = member_info
     
-    # Add docstring for the object itself if it's not a module
-    if docs and not inspectlib.ismodule(obj):
+    # Add docstring for the object itself
+    if docs:
         obj_docstring = inspectlib.getdoc(obj)
         if obj_docstring:
             members_dict["docstring"] = obj_docstring.strip()
@@ -162,6 +177,20 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
         console.print()
 
 def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
+    """
+    Get information about the given module and its members.
+
+    Args:
+        module: The module to inspect.
+        depth (int): The depth of inspection for nested objects.
+        signatures (bool): Whether to include function signatures.
+        docs (bool): Whether to include docstrings.
+        code (bool): Whether to include source code.
+        imports (bool): Whether to include imported modules.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the collected information.
+    """
     console = Console()
     console.print(f"[bold cyan]{module.__name__}[/bold cyan]:")
     print(f"Calling collect_info with docs={docs}")  # Debug print
@@ -169,12 +198,6 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
     
     print("Collected info:")  # Debug print
     print(collected_info)  # Debug print
-    
-    # Add docstring for the module itself
-    if docs:
-        module_docstring = inspectlib.getdoc(module)
-        if module_docstring:
-            collected_info["docstring"] = module_docstring.strip()
     
     print("Final collected info:")  # Debug print
     print(collected_info)  # Debug print
