@@ -229,10 +229,13 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
                 try:
                     obj = import_module(f"{obj.__name__}.{part}")
                 except ImportError:
+                    print(f"Debug: Attribute or module not found: {part}")
                     return None  # Return None if module or attribute is not found
-    except ImportError:
+    except ImportError as e:
+        print(f"Debug: Import error: {e}")
         return None  # Return None if module is not found
-    except AttributeError:
+    except AttributeError as e:
+        print(f"Debug: Attribute error: {e}")
         return None  # Return None if attribute is not found
 
     if all:
@@ -240,7 +243,11 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
     
     try:
         result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-    except Exception:
+        if not result:
+            print("Debug: get_info returned empty result")
+            return None
+    except Exception as e:
+        print(f"Debug: Exception in get_info: {e}")
         return None  # Return None if there's any error in get_info
     
     return result

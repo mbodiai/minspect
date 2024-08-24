@@ -70,6 +70,8 @@ def test_cli_with_multiple_options():
 def test_cli_with_invalid_module():
     runner = CliRunner()
     result = runner.invoke(cli, ["nonexistent_module"])
+    print(f"Debug: CLI output:\n{result.output}")
+    print(f"Debug: Exit code: {result.exit_code}")
     assert result.exit_code == 1
     assert "Error: Module 'nonexistent_module' not found." in result.output
 
