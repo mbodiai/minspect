@@ -1,3 +1,4 @@
+import sys
 from click import argument, command, option, help_option
 
 from minspect.inspecting import inspect_library

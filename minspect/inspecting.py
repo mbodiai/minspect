@@ -169,22 +169,26 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
     table.add_column("Docstring", style="dim")
 
     for name, info in members_dict.items():
-        type_ = info.get("type", "")
-        path = info.get("path", "")
-        signature = info.get("signature", "")
-        docstring = info.get("docstring", "")
-        
-        # Truncate long strings
-        docstring = (docstring[:50] + '...') if len(docstring) > 50 else docstring
-        signature = (signature[:50] + '...') if len(signature) > 50 else signature
+        if isinstance(info, dict):
+            type_ = info.get("type", "")
+            path = info.get("path", "")
+            signature = info.get("signature", "")
+            docstring = info.get("docstring", "")
+            
+            # Truncate long strings
+            docstring = (docstring[:50] + '...') if len(docstring) > 50 else docstring
+            signature = (signature[:50] + '...') if len(signature) > 50 else signature
 
-        table.add_row(name, type_, path, signature, docstring)
+            table.add_row(name, type_, path, signature, docstring)
+        else:
+            # Handle string values
+            table.add_row(name, "Value", "", "", str(info))
 
     console.print(table)
 
     # Render nested members
     for name, info in members_dict.items():
-        if "members" in info:
+        if isinstance(info, dict) and "members" in info:
             console.print(f"\n[bold]Nested members of {name}:[/bold]")
             render_dict(info["members"], indent + 2)
 
@@ -218,7 +222,14 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
         module = import_module(module_name)
         obj = module
         for part in parts[1:]:
-            obj = getattr(obj, part)
+            if hasattr(obj, part):
+                obj = getattr(obj, part)
+            else:
+                # If the attribute is not found, try to import it as a module
+                try:
+                    obj = import_module(f"{obj.__name__}.{part}")
+                except ImportError:
+                    raise AttributeError(f"'{obj.__name__}' has no attribute '{part}'")
     except ImportError as e:
         print(f"Error importing module {module_name}: {e}")
         traceback.print_exc()
