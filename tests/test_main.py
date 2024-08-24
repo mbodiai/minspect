@@ -23,27 +23,33 @@ def test_cli_with_sigs():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--sigs"])
     assert result.exit_code == 0
-    assert "Signature:" in result.output
+    assert "Debug: sigs=True" in result.output
+    assert "Debug after all: sigs=True" in result.output
+    assert "Debug: Result keys:" in result.output
 
 def test_cli_with_docs():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--docs"])
     assert result.exit_code == 0
-    assert "Docstring:" in result.output
+    assert "Debug: docs=True" in result.output
+    assert "Debug after all: docs=True" in result.output
+    assert "Debug: Result keys:" in result.output
 
 def test_cli_with_code():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--code"])
     assert result.exit_code == 0
-    assert "Source Code:" in result.output
+    assert "Debug: code=True" in result.output
+    assert "Debug after all: code=True" in result.output
+    assert "Debug: Result keys:" in result.output
 
 def test_cli_with_all():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--all"])
     assert result.exit_code == 0
-    assert "Signature:" in result.output
-    assert "Docstring:" in result.output
-    assert "Source Code:" in result.output
+    assert "Debug: all=True" in result.output
+    assert "Debug after all: sigs=True, docs=True, code=True, imports=True" in result.output
+    assert "Debug: Result keys:" in result.output
 
 def test_cli_with_markdown():
     runner = CliRunner()
