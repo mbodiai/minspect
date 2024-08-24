@@ -38,13 +38,13 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
             console.print(md_content)
         else:
             generate_panels(console, result, sigs, docs, code)
-        return 0
     except ImportError as e:
         console.print(f"[bold red]Error importing module {module_or_class}:[/bold red] {str(e)}", style="red")
         return 1
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
+    return 0
 
 def generate_markdown(result, sigs, docs, code):
     md_content = "# Inspection Result\n\n"
