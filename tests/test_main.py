@@ -23,32 +23,28 @@ def test_cli_with_sigs():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--sigs"])
     assert result.exit_code == 0
-    assert "Debug: sigs=True" in result.output
-    assert "Debug after all: sigs=True" in result.output
+    assert "Debug: sigs=True, docs=False, code=False, imports=False, all=False" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_docs():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--docs"])
     assert result.exit_code == 0
-    assert "Debug: sigs=False, docs=True" in result.output
-    assert "Debug after all: sigs=False, docs=True" in result.output
+    assert "Debug: sigs=False, docs=True, code=False, imports=False, all=False" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_code():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--code"])
     assert result.exit_code == 0
-    assert "Debug: sigs=False, docs=False, code=True" in result.output
-    assert "Debug after all: sigs=False, docs=False, code=True" in result.output
+    assert "Debug: sigs=False, docs=False, code=True, imports=False, all=False" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_all():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--all"])
     assert result.exit_code == 0
-    assert "Debug: sigs=False, docs=False, code=False, imports=False, all=True" in result.output
-    assert "Debug after all: sigs=True, docs=True, code=True, imports=True" in result.output
+    assert "Debug: sigs=True, docs=True, code=True, imports=True, all=True" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_markdown():
