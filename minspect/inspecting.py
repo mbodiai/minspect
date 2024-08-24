@@ -157,26 +157,38 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
     
     return members_dict
 
+from rich.table import Table
+
 def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
     console = Console()
-    for name, info in members_dict.items():
-      
-        console.print(" " * indent + f"[bold green]{name}[/bold green]:")
-        name = info.get("path", name)
-        console.print(f"{' ' * indent}[bold cyan]{name}[/bold cyan]:")
-        if "type" in info:
-            console.print(f"{' ' * (indent + 2)}[bold]Type:[/bold] {info['type']}")
-        if "signature" in info:
-            console.print(f"{' ' * (indent + 2)}[bold]Signature:[/bold] {info['signature']}")
-        if "docstring" in info:
-            console.print(Markdown(info["docstring"]))
-        if "code" in info:
-            console.print(Syntax(info["code"], "python", word_wrap=True, background_color="white"))
-        if "members" in info:
-            render_dict(info["members"], indent + 2)
-        console.print()
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Name", style="dim", width=20)
+    table.add_column("Type", style="dim")
+    table.add_column("Path", style="dim")
+    table.add_column("Signature", style="dim")
+    table.add_column("Docstring", style="dim")
 
-def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
+    for name, info in members_dict.items():
+        type_ = info.get("type", "")
+        path = info.get("path", "")
+        signature = info.get("signature", "")
+        docstring = info.get("docstring", "")
+        
+        # Truncate long strings
+        docstring = (docstring[:50] + '...') if len(docstring) > 50 else docstring
+        signature = (signature[:50] + '...') if len(signature) > 50 else signature
+
+        table.add_row(name, type_, path, signature, docstring)
+
+    console.print(table)
+
+    # Render nested members
+    for name, info in members_dict.items():
+        if "members" in info:
+            console.print(f"\n[bold]Nested members of {name}:[/bold]")
+            render_dict(info["members"], indent + 2)
+
+def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True, code: bool = False, imports: bool = False) -> Dict[str, Any]:
     """
     Get information about the given module and its members.
 
@@ -192,20 +204,12 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
         Dict[str, Any]: A dictionary containing the collected information.
     """
     console = Console()
-    console.print(f"[bold cyan]{module.__name__}[/bold cyan]:")
-    print(f"Calling collect_info with docs={docs}")  # Debug print
+    console.print(f"[bold cyan]Inspecting: {module.__name__}[/bold cyan]")
     collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-    
-    print("Collected info:")  # Debug print
-    print(collected_info)  # Debug print
-    
-    print("Final collected info:")  # Debug print
-    print(collected_info)  # Debug print
-    
     render_dict(collected_info)
     return collected_info
 
-def inspect_library(module_or_class, depth, signatures=False, docs=False, code=False, imports=False, all=False, markdown=False):
+def inspect_library(module_or_class, depth, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
     parts = module_or_class.split(".")
     module_name = parts[0]
     obj = None
