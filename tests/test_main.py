@@ -14,3 +14,6 @@ def test_cli_with_options():
     assert "minspect" in result.output
     assert "Signature:" in result.output
     assert "Docstring:" in result.output
+    assert "Type:" in result.output
+    assert "Path:" in result.output
+    assert "Members:" in result.output

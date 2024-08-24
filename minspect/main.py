@@ -18,11 +18,28 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
     for name, info in result.items():
         print(f"{name}:")
+        if 'type' in info:
+            print(f"  Type: {info['type']}")
+        if 'path' in info:
+            print(f"  Path: {info['path']}")
         if 'signature' in info:
             print(f"  Signature: {info['signature']}")
         if 'docstring' in info:
             print(f"  Docstring: {info['docstring'][:50]}...")
         print()
+        if 'members' in info:
+            print("  Members:")
+            for member_name, member_info in info['members'].items():
+                print(f"    {member_name}:")
+                if 'type' in member_info:
+                    print(f"      Type: {member_info['type']}")
+                if 'path' in member_info:
+                    print(f"      Path: {member_info['path']}")
+                if 'signature' in member_info:
+                    print(f"      Signature: {member_info['signature']}")
+                if 'docstring' in member_info:
+                    print(f"      Docstring: {member_info['docstring'][:50]}...")
+                print()
 
 if __name__ == '__main__':
     cli()
