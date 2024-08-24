@@ -238,7 +238,10 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
     if all:
         signatures = docs = code = imports = True
     
-    result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    try:
+        result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    except Exception:
+        return None  # Return None if there's any error in get_info
     
     return result
 

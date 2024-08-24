@@ -28,7 +28,7 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
             sigs = docs = code = imports = True
         print(f"Debug after all: sigs={sigs}, docs={docs}, code={code}, imports={imports}")
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
-        if not result:
+        if result is None:
             console.print(f"[bold red]Error: Module '{module_or_class}' not found.[/bold red]", style="red")
             return 1
         print(f"Debug: Result keys: {result.keys()}")
