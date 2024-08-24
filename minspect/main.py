@@ -22,10 +22,13 @@ from minspect.inspecting import inspect_library
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     console = Console()
+    print(f"Debug: sigs={sigs}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
     try:
         if all:
             sigs = docs = code = imports = True
+        print(f"Debug after all: sigs={sigs}, docs={docs}, code={code}, imports={imports}")
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
+        print(f"Debug: Result keys: {result.keys()}")
     
         if markdown:
             md_content = generate_markdown(result, sigs, docs, code)
