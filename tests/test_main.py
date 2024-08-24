@@ -71,4 +71,43 @@ def test_cli_with_valid_module():
     assert result.exit_code == 0
     assert "minspect" in result.output
 
+def test_generate_markdown():
+    result = {
+        'test_function': {
+            'type': 'function',
+            'path': 'test.module.test_function',
+            'signature': 'def test_function(arg1, arg2)',
+            'docstring': 'This is a test function',
+            'code': 'def test_function(arg1, arg2):\n    pass'
+        }
+    }
+    md_content = generate_markdown(result, True, True, True)
+    assert "# Inspection Result" in md_content
+    assert "## test_function" in md_content
+    assert "**Type:** function" in md_content
+    assert "**Path:** test.module.test_function" in md_content
+    assert "**Signature:**" in md_content
+    assert "**Docstring:**" in md_content
+    assert "**Source Code:**" in md_content
+
+def test_generate_panels():
+    console = Console(file=StringIO())
+    result = {
+        'test_function': {
+            'type': 'function',
+            'path': 'test.module.test_function',
+            'signature': 'def test_function(arg1, arg2)',
+            'docstring': 'This is a test function',
+            'code': 'def test_function(arg1, arg2):\n    pass'
+        }
+    }
+    generate_panels(console, result, True, True, True)
+    output = console.file.getvalue()
+    assert "test_function" in output
+    assert "Type: function" in output
+    assert "Path: test.module.test_function" in output
+    assert "Signature:" in output
+    assert "Docstring:" in output
+    assert "Source Code:" in output
+
 # Add more tests for other combinations as needed

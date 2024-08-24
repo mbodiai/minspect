@@ -42,6 +42,54 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
 def generate_markdown(result, sigs, docs, code):
     md_content = "# Inspection Result\n\n"
     for name, info in result.items():
+        md_content += generate_markdown_section(name, info, sigs, docs, code)
+    return md_content
+
+def generate_markdown_section(name, info, sigs, docs, code, level=2):
+    md_content = f"{'#' * level} {name}\n\n"
+    if 'type' in info:
+        md_content += f"**Type:** {info['type']}\n\n"
+    if 'path' in info:
+        md_content += f"**Path:** {info['path']}\n\n"
+    if sigs and 'signature' in info:
+        md_content += f"**Signature:**\n```python\n{info['signature']}\n```\n\n"
+    if docs and 'docstring' in info:
+        md_content += f"**Docstring:**\n```\n{info['docstring']}\n```\n\n"
+    if code and 'code' in info:
+        md_content += f"**Source Code:**\n```python\n{info['code']}\n```\n\n"
+    if 'members' in info:
+        for member_name, member_info in info['members'].items():
+            md_content += generate_markdown_section(member_name, member_info, sigs, docs, code, level + 1)
+    return md_content
+
+def generate_panels(console, result, sigs, docs, code):
+    for name, info in result.items():
+        panel_content = generate_panel_content(name, info, sigs, docs, code)
+        console.print(Panel(panel_content, expand=False))
+        
+        if 'members' in info:
+            console.print("\n[bold]Members:[/bold]")
+            for member_name, member_info in info['members'].items():
+                member_panel = generate_panel_content(member_name, member_info, sigs, docs, code)
+                console.print(Panel(member_panel, expand=False))
+
+def generate_panel_content(name, info, sigs, docs, code):
+    content = f"[bold cyan]{name}[/bold cyan]\n\n"
+    if 'type' in info:
+        content += f"[bold]Type:[/bold] {info['type']}\n"
+    if 'path' in info:
+        content += f"[bold]Path:[/bold] {info['path']}\n"
+    if sigs and 'signature' in info:
+        content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
+    if docs and 'docstring' in info:
+        content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
+    if code and 'code' in info:
+        content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
+    return content
+
+def generate_markdown(result, sigs, docs, code):
+    md_content = "# Inspection Result\n\n"
+    for name, info in result.items():
         md_content += f"## {name}\n\n"
         md_content += f"**Type:** {info.get('type', 'N/A')}\n\n"
         md_content += f"**Path:** {info.get('path', 'N/A')}\n\n"
