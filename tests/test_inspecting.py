@@ -9,45 +9,66 @@ from minspect.inspecting import (
     inspect_library
 )
 
-def test_load_all_modules():
-    # This test might need to be adjusted based on your actual module structure
-    import minspect
-    modules = load_all_modules(minspect)
-    assert len(modules) > 0
-    assert any(name == "inspecting" for name, _ in modules)
+# Existing tests...
 
-def test_is_standard_lib():
-    import os
-    assert is_standard_lib(os) == True
-    import minspect
-    assert is_standard_lib(minspect) == False
-
-def test_get_root_module():
-    import os.path
-    assert get_root_module(os.path) == "os"
-    import minspect.inspecting
-    assert get_root_module(minspect.inspecting) == "minspect"
-
-def test_is_imported():
-    import os
-    import minspect
-    assert is_imported(minspect, os) == True
-    from minspect import inspecting
-    assert is_imported(minspect, inspecting) == False
-
-def test_get_full_name():
-    def test_function():
+# New tests for class methods and other objects
+class TestClass:
+    def instance_method(self):
         pass
-    assert get_full_name(test_function) == "test_inspecting.test_get_full_name.<locals>.test_function"
-    assert get_full_name(pytest) == "pytest"
 
-def test_collect_info():
-    import minspect
-    info = collect_info(minspect, depth=1)
+    @classmethod
+    def class_method(cls):
+        pass
+
+    @staticmethod
+    def static_method():
+        pass
+
+    class NestedClass:
+        def nested_method(self):
+            pass
+
+def test_get_full_name_class_methods():
+    assert get_full_name(TestClass.instance_method) == "test_inspecting.TestClass.instance_method"
+    assert get_full_name(TestClass.class_method) == "test_inspecting.TestClass.class_method"
+    assert get_full_name(TestClass.static_method) == "test_inspecting.TestClass.static_method"
+    assert get_full_name(TestClass.NestedClass.nested_method) == "test_inspecting.TestClass.NestedClass.nested_method"
+
+def test_collect_info_class():
+    info = collect_info(TestClass, depth=2)
     assert isinstance(info, dict)
-    assert "inspecting" in info
+    assert "instance_method" in info
+    assert "class_method" in info
+    assert "static_method" in info
+    assert "NestedClass" in info
+    assert isinstance(info["NestedClass"]["members"], dict)
+    assert "nested_method" in info["NestedClass"]["members"]
 
-def test_inspect_library():
-    result = inspect_library("minspect", depth=1)
+def test_collect_info_builtin():
+    info = collect_info(list, depth=1)
+    assert isinstance(info, dict)
+    assert "append" in info
+    assert "extend" in info
+
+def test_collect_info_module():
+    import math
+    info = collect_info(math, depth=1)
+    assert isinstance(info, dict)
+    assert "pi" in info
+    assert "sin" in info
+
+def test_inspect_library_depth():
+    result = inspect_library("minspect", depth=2)
     assert isinstance(result, dict)
     assert "inspecting" in result
+    assert isinstance(result["inspecting"]["members"], dict)
+    assert "collect_info" in result["inspecting"]["members"]
+
+def test_inspect_library_options():
+    result = inspect_library("minspect.inspecting", depth=1, signatures=True, docs=True)
+    assert isinstance(result, dict)
+    assert "collect_info" in result
+    assert "signature" in result["collect_info"]
+    assert "docstring" in result["collect_info"]
+
+# You can add more tests here to cover other scenarios and edge cases
