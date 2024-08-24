@@ -159,10 +159,22 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
     console = Console()
     console.print(f"[bold cyan]{module.__name__}[/bold cyan]:")
     collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    
+    # Add docstring for the module itself
     if docs:
-        docstring = inspectlib.getdoc(module)
-        if docstring:
-            collected_info["docstring"] = docstring.strip()
+        module_docstring = inspectlib.getdoc(module)
+        if module_docstring:
+            collected_info["docstring"] = module_docstring.strip()
+    
+    # Add docstrings for each member
+    for member_name, member_info in collected_info.items():
+        if docs and "docstring" not in member_info:
+            member_obj = getattr(module, member_name, None)
+            if member_obj:
+                member_docstring = inspectlib.getdoc(member_obj)
+                if member_docstring:
+                    member_info["docstring"] = member_docstring.strip()
+    
     render_dict(collected_info)
     return collected_info
 

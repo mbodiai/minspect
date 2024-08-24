@@ -69,11 +69,13 @@ def test_inspect_library_depth():
 def test_inspect_library_options():
     result = inspect_library("minspect.inspecting", depth=1, signatures=True, docs=True)
     assert isinstance(result, dict)
-    assert "collect_info" in result
-    assert "signature" in result["collect_info"]
-    assert "docstring" in result["collect_info"], f"Expected 'docstring' in {result['collect_info']}"
-    # Print the result for debugging
+    assert "collect_info" in result, f"'collect_info' not found in {result.keys()}"
+    assert "signature" in result["collect_info"], f"'signature' not found in {result['collect_info'].keys()}"
+    assert "docstring" in result["collect_info"], f"'docstring' not found in {result['collect_info'].keys()}"
     print("Result of inspect_library:")
-    print(result)
+    for key, value in result.items():
+        print(f"{key}:")
+        for subkey, subvalue in value.items():
+            print(f"  {subkey}: {subvalue[:100] if isinstance(subvalue, str) else subvalue}")
 
 # You can add more tests here to cover other scenarios and edge cases
