@@ -116,7 +116,7 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
             if docstring:
                 member_info["docstring"] = docstring.strip()
 
-        if signatures and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
+        if signatures and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj) or inspectlib.isclass(member_obj)):
             try:
                 member_info["signature"] = str(inspectlib.signature(member_obj))
             except ValueError:
@@ -187,7 +187,13 @@ def inspect_library(module_or_class, depth, signatures=False, docs=False, code=F
 
     if all:
         signatures = docs = code = imports = True
-    return get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    
+    if markdown:
+        # TODO: Implement markdown conversion
+        pass
+    
+    return result
 
 def inspect_repo(repo_path, depth, signatures, docs, code, imports, all):
     
