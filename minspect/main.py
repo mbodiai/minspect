@@ -14,74 +14,84 @@ from minspect.inspecting import inspect_library
 @option("--imports", "-imp", is_flag=True, help="Include imports")
 @option("--all", "-a", is_flag=True, help="Include all")
 @option("--markdown", "-md", is_flag=True, help="Output as markdown")
+from rich.console import Console
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.markdown import Markdown
+
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
+    console = Console()
     try:
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
     
         if markdown:
-            print("# Inspection Result")
+            md_content = "# Inspection Result\n\n"
             for name, info in result.items():
-                print(f"\n## {name}")
+                md_content += f"## {name}\n\n"
                 if 'type' in info:
-                    print(f"**Type:** {info['type']}")
+                    md_content += f"**Type:** {info['type']}\n\n"
                 if 'path' in info:
-                    print(f"**Path:** {info['path']}")
+                    md_content += f"**Path:** {info['path']}\n\n"
                 if 'signature' in info:
-                    print(f"\n**Signature:**\n```python\n{info['signature']}\n```")
+                    md_content += f"**Signature:**\n```python\n{info['signature']}\n```\n\n"
                 if 'docstring' in info:
-                    print(f"\n**Docstring:**\n```\n{info['docstring']}\n```")
+                    md_content += f"**Docstring:**\n```\n{info['docstring']}\n```\n\n"
                 if 'code' in info:
-                    print(f"\n**Source Code:**\n```python\n{info['code']}\n```")
+                    md_content += f"**Source Code:**\n```python\n{info['code']}\n```\n\n"
                 if 'members' in info:
-                    print("\n### Members")
+                    md_content += "### Members\n\n"
                     for member_name, member_info in info['members'].items():
-                        print(f"\n#### {member_name}")
+                        md_content += f"#### {member_name}\n\n"
                         if 'type' in member_info:
-                            print(f"**Type:** {member_info['type']}")
+                            md_content += f"**Type:** {member_info['type']}\n\n"
                         if 'path' in member_info:
-                            print(f"**Path:** {member_info['path']}")
+                            md_content += f"**Path:** {member_info['path']}\n\n"
                         if 'signature' in member_info:
-                            print(f"\n**Signature:**\n```python\n{member_info['signature']}\n```")
+                            md_content += f"**Signature:**\n```python\n{member_info['signature']}\n```\n\n"
                         if 'docstring' in member_info:
-                            print(f"\n**Docstring:**\n```\n{member_info['docstring']}\n```")
+                            md_content += f"**Docstring:**\n```\n{member_info['docstring']}\n```\n\n"
                         if 'code' in member_info:
-                            print(f"\n**Source Code:**\n```python\n{member_info['code']}\n```")
+                            md_content += f"**Source Code:**\n```python\n{member_info['code']}\n```\n\n"
+            console.print(Markdown(md_content))
         else:
             for name, info in result.items():
-                print(f"{name}:")
+                panel_content = f"[bold cyan]{name}[/bold cyan]\n\n"
                 if 'type' in info:
-                    print(f"  Type: {info['type']}")
+                    panel_content += f"[bold]Type:[/bold] {info['type']}\n"
                 if 'path' in info:
-                    print(f"  Path: {info['path']}")
+                    panel_content += f"[bold]Path:[/bold] {info['path']}\n"
                 if sigs and 'signature' in info:
-                    print(f"  Signature: {info['signature']}")
+                    panel_content += f"\n[bold]Signature:[/bold]\n{Syntax(info['signature'], 'python', theme='monokai')}\n"
                 if docs and 'docstring' in info:
-                    print(f"  Docstring: {info['docstring']}")
+                    panel_content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
                 if code and 'code' in info:
-                    print(f"  Source Code:\n{info['code']}")
-                print()
+                    panel_content += f"\n[bold]Source Code:[/bold]\n{Syntax(info['code'], 'python', theme='monokai')}\n"
+                
+                console.print(Panel(panel_content, expand=False))
+                
                 if 'members' in info:
-                    print("  Members:")
+                    console.print("\n[bold]Members:[/bold]")
                     for member_name, member_info in info['members'].items():
-                        print(f"    {member_name}:")
+                        member_panel = f"[bold cyan]{member_name}[/bold cyan]\n\n"
                         if 'type' in member_info:
-                            print(f"      Type: {member_info['type']}")
+                            member_panel += f"[bold]Type:[/bold] {member_info['type']}\n"
                         if 'path' in member_info:
-                            print(f"      Path: {member_info['path']}")
+                            member_panel += f"[bold]Path:[/bold] {member_info['path']}\n"
                         if sigs and 'signature' in member_info:
-                            print(f"      Signature: {member_info['signature']}")
+                            member_panel += f"\n[bold]Signature:[/bold]\n{Syntax(member_info['signature'], 'python', theme='monokai')}\n"
                         if docs and 'docstring' in member_info:
-                            print(f"      Docstring: {member_info['docstring']}")
+                            member_panel += f"\n[bold]Docstring:[/bold]\n{member_info['docstring']}\n"
                         if code and 'code' in member_info:
-                            print(f"      Source Code:\n{member_info['code']}")
-                        print()
+                            member_panel += f"\n[bold]Source Code:[/bold]\n{Syntax(member_info['code'], 'python', theme='monokai')}\n"
+                        
+                        console.print(Panel(member_panel, expand=False))
         return 0
     except ImportError as e:
-        print(f"Error: Module '{module_or_class}' not found. {str(e)}", file=sys.stderr)
+        console.print(f"[bold red]Error:[/bold red] Module '{module_or_class}' not found. {str(e)}", style="red")
         return 1
     except Exception as e:
-        print(f"Error: {str(e)}", file=sys.stderr)
+        console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
 
 if __name__ == '__main__':
