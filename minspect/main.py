@@ -26,7 +26,7 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     try:
         if all:
             sigs = docs = code = imports = True
-        print(f"Debug: After 'all' option: sigs={sigs}, docs={docs}, code={code}, imports={imports}")
+        print(f"Debug: sigs={sigs}, docs={docs}, code={code}, imports={imports}, all={all}")
         result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
         print(f"Debug: Result from inspect_library: {result}")
         
