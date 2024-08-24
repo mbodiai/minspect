@@ -70,28 +70,37 @@ def generate_markdown_section(name, info, sigs, docs, code, level=2):
     return md_content
 
 def generate_panels(console, result, sigs, docs, code):
-    for name, info in result.items():
-        panel_content = generate_panel_content(name, info, sigs, docs, code)
-        console.print(Panel(panel_content, expand=False))
-        
-        if 'members' in info:
-            console.print("\n[bold]Members:[/bold]")
-            for member_name, member_info in info['members'].items():
-                member_panel = generate_panel_content(member_name, member_info, sigs, docs, code)
-                console.print(Panel(member_panel, expand=False))
+    if isinstance(result, dict):
+        for name, info in result.items():
+            try:
+                panel_content = generate_panel_content(name, info, sigs, docs, code)
+                console.print(Panel(panel_content, expand=False))
+                
+                if isinstance(info, dict) and 'members' in info:
+                    console.print("\n[bold]Members:[/bold]")
+                    for member_name, member_info in info['members'].items():
+                        member_panel = generate_panel_content(member_name, member_info, sigs, docs, code)
+                        console.print(Panel(member_panel, expand=False))
+            except Exception as e:
+                console.print(f"[bold red]Error processing {name}:[/bold red] {str(e)}")
+    else:
+        console.print(f"[bold red]Error:[/bold red] Expected a dictionary, but got {type(result)}")
 
 def generate_panel_content(name, info, sigs, docs, code):
     content = f"[bold cyan]{name}[/bold cyan]\n\n"
-    if 'type' in info:
-        content += f"[bold]Type:[/bold] {info['type']}\n"
-    if 'path' in info:
-        content += f"[bold]Path:[/bold] {info['path']}\n"
-    if sigs and 'signature' in info:
-        content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
-    if docs and 'docstring' in info:
-        content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
-    if code and 'code' in info:
-        content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
+    if isinstance(info, dict):
+        if 'type' in info:
+            content += f"[bold]Type:[/bold] {info['type']}\n"
+        if 'path' in info:
+            content += f"[bold]Path:[/bold] {info['path']}\n"
+        if sigs and 'signature' in info:
+            content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
+        if docs and 'docstring' in info:
+            content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
+        if code and 'code' in info:
+            content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
+    else:
+        content += f"{info}\n"
     return content
 
 def generate_markdown(result, sigs, docs, code):
