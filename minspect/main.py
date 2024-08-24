@@ -1,5 +1,9 @@
 import sys
 from click import argument, command, option, help_option
+from rich.console import Console
+from rich.panel import Panel
+from rich.syntax import Syntax
+from rich.markdown import Markdown
 
 from minspect.inspecting import inspect_library
 
@@ -14,11 +18,6 @@ from minspect.inspecting import inspect_library
 @option("--imports", "-imp", is_flag=True, help="Include imports")
 @option("--all", "-a", is_flag=True, help="Include all")
 @option("--markdown", "-md", is_flag=True, help="Output as markdown")
-from rich.console import Console
-from rich.panel import Panel
-from rich.syntax import Syntax
-from rich.markdown import Markdown
-
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     console = Console()
