@@ -85,53 +85,47 @@ def get_full_name(obj):
     else:
         return "Unknown type"
 
-def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False,
-) -> Dict[str, Any]:
+def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
     if current_depth > depth:
         return {}
     
     members_dict = {}
-    members = inspectlib.getmembers(obj)
+    if inspectlib.isclass(obj) or inspectlib.ismodule(obj):
+        members = inspectlib.getmembers(obj)
+    else:
+        members = [(obj.__name__, obj)]
     
-    if current_depth == 0:
-        members += load_all_modules(obj)
     for member, member_obj in members:
         if member.startswith("__") and member.endswith("__"):
             continue
         
-        if is_standard_lib(member):
+        if is_standard_lib(member_obj):
             continue
-        if is_imported(obj, member_obj) and not imports :
+        if is_imported(obj, member_obj) and not imports:
             continue
 
-        
-        member_obj = getattr(obj, member)
         member_info = {}
-        
+        member_info["type"] = "class" if inspectlib.isclass(member_obj) else "module" if inspectlib.ismodule(member_obj) else "function" if inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj) else "attribute"
+        member_info["path"] = get_full_name(member_obj)
+
+        if docs:
+            docstring = inspectlib.getdoc(member_obj)
+            if docstring:
+                member_info["docstring"] = docstring
+
+        if signatures and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
+            member_info["signature"] = str(inspectlib.signature(member_obj))
+
+        if code and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
+            try:
+                source_code = inspectlib.getsource(member_obj)
+                member_info["code"] = source_code
+            except OSError:
+                member_info["code"] = "Source code not available"
+
         if inspectlib.isclass(member_obj) or inspectlib.ismodule(member_obj):
-            member_info["type"] = "class" if inspectlib.isclass(member_obj) else "module"
-            if docs:
-                docstring = inspectlib.getdoc(member_obj)
-                if docstring:
-                    member_info["docstring"] = docstring
-            member_info["path"] = get_full_name(member_obj)
-            member_info["members"] = collect_info(member_obj, depth, current_depth + 1, signatures, docs, code)
-        else:
-            member_info["path"] = get_full_name(member_obj)
-            member_info["type"] = "function" if inspectlib.isfunction(member_obj) else "attribute"
-            if signatures and inspectlib.isfunction(member_obj):
-                member_info["signature"] = str(inspectlib.signature(member_obj))
-            if docs:
-                docstring = inspectlib.getdoc(member_obj)
-                if docstring:
-                    member_info["docstring"] = docstring
-            if code and inspectlib.isfunction(member_obj):
-                try:
-                    source_code = inspectlib.getsource(member_obj)
-                    member_info["code"] = source_code
-                except OSError:
-                    member_info["code"] = "Source code not available"
-        
+            member_info["members"] = collect_info(member_obj, depth, current_depth + 1, signatures, docs, code, imports)
+
         members_dict[member] = member_info
     
     return members_dict
@@ -166,34 +160,28 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
     render_dict(collected_info)
     return collected_info
 
-def inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown=False):
+def inspect_library(module_or_class, depth, signatures=False, docs=False, code=False, imports=False, all=False, markdown=False):
     parts = module_or_class.split(".")
-    module_name = ".".join(parts[:-1]) if len(parts) > 1 else module_or_class
-    class_name = parts[-1] if len(parts) > 1 else None
+    module_name = parts[0]
+    obj = None
 
     try:
         module = import_module(module_name)
         obj = module
-        if class_name:
-            obj = getattr(module, class_name)
+        for part in parts[1:]:
+            obj = getattr(obj, part)
     except ImportError as e:
         print(f"Error importing module {module_name}: {e}")
         traceback.print_exc()
         return
     except AttributeError as e:
-        module = import_module(module_name)
-        for member in load_all_modules(module):
-            if class_name == member[0]:
-                obj = member[1]
-                break
+        print(f"Error accessing attribute {part} in {obj}: {e}")
+        traceback.print_exc()
+        return
 
-        else:
-            print(f"Error accessing attribute {class_name} in {module_name}: {e}")
-            traceback.print_exc()
-            return
     if all:
-        sigs =  docs = code = imports = True
-    return get_info(obj, depth, sigs, docs, code, imports)
+        signatures = docs = code = imports = True
+    return get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
 
 def inspect_repo(repo_path, depth, signatures, docs, code, imports, all):
     
