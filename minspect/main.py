@@ -16,30 +16,64 @@ from minspect.inspecting import inspect_library
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
-    for name, info in result.items():
-        print(f"{name}:")
-        if 'type' in info:
-            print(f"  Type: {info['type']}")
-        if 'path' in info:
-            print(f"  Path: {info['path']}")
-        if 'signature' in info:
-            print(f"  Signature: {info['signature']}")
-        if 'docstring' in info:
-            print(f"  Docstring: {info['docstring'][:50]}...")
-        print()
-        if 'members' in info:
-            print("  Members:")
-            for member_name, member_info in info['members'].items():
-                print(f"    {member_name}:")
-                if 'type' in member_info:
-                    print(f"      Type: {member_info['type']}")
-                if 'path' in member_info:
-                    print(f"      Path: {member_info['path']}")
-                if 'signature' in member_info:
-                    print(f"      Signature: {member_info['signature']}")
-                if 'docstring' in member_info:
-                    print(f"      Docstring: {member_info['docstring'][:50]}...")
-                print()
+    
+    if markdown:
+        print("# Inspection Result")
+        for name, info in result.items():
+            print(f"\n## {name}")
+            if 'type' in info:
+                print(f"**Type:** {info['type']}")
+            if 'path' in info:
+                print(f"**Path:** {info['path']}")
+            if 'signature' in info:
+                print(f"\n**Signature:**\n```python\n{info['signature']}\n```")
+            if 'docstring' in info:
+                print(f"\n**Docstring:**\n```\n{info['docstring']}\n```")
+            if 'code' in info:
+                print(f"\n**Source Code:**\n```python\n{info['code']}\n```")
+            if 'members' in info:
+                print("\n### Members")
+                for member_name, member_info in info['members'].items():
+                    print(f"\n#### {member_name}")
+                    if 'type' in member_info:
+                        print(f"**Type:** {member_info['type']}")
+                    if 'path' in member_info:
+                        print(f"**Path:** {member_info['path']}")
+                    if 'signature' in member_info:
+                        print(f"\n**Signature:**\n```python\n{member_info['signature']}\n```")
+                    if 'docstring' in member_info:
+                        print(f"\n**Docstring:**\n```\n{member_info['docstring']}\n```")
+                    if 'code' in member_info:
+                        print(f"\n**Source Code:**\n```python\n{member_info['code']}\n```")
+    else:
+        for name, info in result.items():
+            print(f"{name}:")
+            if 'type' in info:
+                print(f"  Type: {info['type']}")
+            if 'path' in info:
+                print(f"  Path: {info['path']}")
+            if 'signature' in info:
+                print(f"  Signature: {info['signature']}")
+            if 'docstring' in info:
+                print(f"  Docstring: {info['docstring']}")
+            if 'code' in info:
+                print(f"  Source Code:\n{info['code']}")
+            print()
+            if 'members' in info:
+                print("  Members:")
+                for member_name, member_info in info['members'].items():
+                    print(f"    {member_name}:")
+                    if 'type' in member_info:
+                        print(f"      Type: {member_info['type']}")
+                    if 'path' in member_info:
+                        print(f"      Path: {member_info['path']}")
+                    if 'signature' in member_info:
+                        print(f"      Signature: {member_info['signature']}")
+                    if 'docstring' in member_info:
+                        print(f"      Docstring: {member_info['docstring']}")
+                    if 'code' in member_info:
+                        print(f"      Source Code:\n{member_info['code']}")
+                    print()
 
 if __name__ == '__main__':
     cli()
