@@ -61,11 +61,11 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
                 if 'path' in info:
                     panel_content += f"[bold]Path:[/bold] {info['path']}\n"
                 if sigs and 'signature' in info:
-                    panel_content += f"\n[bold]Signature:[/bold]\n{Syntax(info['signature'], 'python', theme='monokai')}\n"
+                    panel_content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
                 if docs and 'docstring' in info:
                     panel_content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
                 if code and 'code' in info:
-                    panel_content += f"\n[bold]Source Code:[/bold]\n{Syntax(info['code'], 'python', theme='monokai')}\n"
+                    panel_content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
                 
                 console.print(Panel(panel_content, expand=False))
                 
@@ -78,11 +78,11 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
                         if 'path' in member_info:
                             member_panel += f"[bold]Path:[/bold] {member_info['path']}\n"
                         if sigs and 'signature' in member_info:
-                            member_panel += f"\n[bold]Signature:[/bold]\n{Syntax(member_info['signature'], 'python', theme='monokai')}\n"
+                            member_panel += f"\n[bold]Signature:[/bold]\n{member_info['signature']}\n"
                         if docs and 'docstring' in member_info:
                             member_panel += f"\n[bold]Docstring:[/bold]\n{member_info['docstring']}\n"
                         if code and 'code' in member_info:
-                            member_panel += f"\n[bold]Source Code:[/bold]\n{Syntax(member_info['code'], 'python', theme='monokai')}\n"
+                            member_panel += f"\n[bold]Source Code:[/bold]\n{member_info['code']}\n"
                         
                         console.print(Panel(member_panel, expand=False))
         return 0
