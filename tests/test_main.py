@@ -31,23 +31,23 @@ def test_cli_with_docs():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--docs"])
     assert result.exit_code == 0
-    assert "Debug: docs=True" in result.output
-    assert "Debug after all: docs=True" in result.output
+    assert "Debug: sigs=False, docs=True" in result.output
+    assert "Debug after all: sigs=False, docs=True" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_code():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--code"])
     assert result.exit_code == 0
-    assert "Debug: code=True" in result.output
-    assert "Debug after all: code=True" in result.output
+    assert "Debug: sigs=False, docs=False, code=True" in result.output
+    assert "Debug after all: sigs=False, docs=False, code=True" in result.output
     assert "Debug: Result keys:" in result.output
 
 def test_cli_with_all():
     runner = CliRunner()
     result = runner.invoke(cli, ["minspect", "--all"])
     assert result.exit_code == 0
-    assert "Debug: all=True" in result.output
+    assert "Debug: sigs=False, docs=False, code=False, imports=False, all=True" in result.output
     assert "Debug after all: sigs=True, docs=True, code=True, imports=True" in result.output
     assert "Debug: Result keys:" in result.output
 
