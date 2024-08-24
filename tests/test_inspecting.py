@@ -67,7 +67,10 @@ def test_inspect_library_depth():
     assert "collect_info" in result["inspecting"]["members"]
 
 def test_inspect_library_options():
+    print("Starting test_inspect_library_options")  # Debug print
     result = inspect_library("minspect.inspecting", depth=1, signatures=True, docs=True)
+    print("Result from inspect_library:")  # Debug print
+    print(result)  # Debug print
     assert isinstance(result, dict)
     assert "collect_info" in result, f"'collect_info' not found in {result.keys()}"
     assert "signature" in result["collect_info"], f"'signature' not found in {result['collect_info'].keys()}"

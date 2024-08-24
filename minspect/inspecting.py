@@ -158,7 +158,11 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
 def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
     console = Console()
     console.print(f"[bold cyan]{module.__name__}[/bold cyan]:")
+    print(f"Calling collect_info with docs={docs}")  # Debug print
     collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    
+    print("Collected info:")  # Debug print
+    print(collected_info)  # Debug print
     
     # Add docstring for the module itself
     if docs:
@@ -174,6 +178,9 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
                 member_docstring = inspectlib.getdoc(member_obj)
                 if member_docstring:
                     member_info["docstring"] = member_docstring.strip()
+    
+    print("Final collected info:")  # Debug print
+    print(collected_info)  # Debug print
     
     render_dict(collected_info)
     return collected_info
@@ -199,7 +206,12 @@ def inspect_library(module_or_class, depth, signatures=False, docs=False, code=F
 
     if all:
         signatures = docs = code = imports = True
+    
+    print(f"Calling get_info with docs={docs}")  # Debug print
     result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+    
+    print("Result from get_info:")  # Debug print
+    print(result)  # Debug print
     
     if markdown:
         # TODO: Implement markdown conversion
