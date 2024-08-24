@@ -222,24 +222,16 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
     except ImportError as e:
         print(f"Error importing module {module_name}: {e}")
         traceback.print_exc()
-        return
+        return {}
     except AttributeError as e:
         print(f"Error accessing attribute {part} in {obj}: {e}")
         traceback.print_exc()
-        return
+        return {}
 
     if all:
         signatures = docs = code = imports = True
     
-    print(f"Calling get_info with docs={docs}")  # Debug print
     result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-    
-    print("Result from get_info:")  # Debug print
-    print(result)  # Debug print
-    
-    if markdown:
-        # TODO: Implement markdown conversion
-        pass
     
     return result
 
