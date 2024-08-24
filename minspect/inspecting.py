@@ -134,6 +134,12 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
 
         members_dict[member] = member_info
     
+    # Add docstring for the object itself if it's not a module
+    if docs and not inspectlib.ismodule(obj):
+        obj_docstring = inspectlib.getdoc(obj)
+        if obj_docstring:
+            members_dict["docstring"] = obj_docstring.strip()
+    
     return members_dict
 
 def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
@@ -169,15 +175,6 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
         module_docstring = inspectlib.getdoc(module)
         if module_docstring:
             collected_info["docstring"] = module_docstring.strip()
-    
-    # Add docstrings for each member
-    for member_name, member_info in collected_info.items():
-        if docs and "docstring" not in member_info:
-            member_obj = getattr(module, member_name, None)
-            if member_obj:
-                member_docstring = inspectlib.getdoc(member_obj)
-                if member_docstring:
-                    member_info["docstring"] = member_docstring.strip()
     
     print("Final collected info:")  # Debug print
     print(collected_info)  # Debug print
