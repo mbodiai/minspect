@@ -71,6 +71,9 @@ def test_inspect_library_options():
     assert isinstance(result, dict)
     assert "collect_info" in result
     assert "signature" in result["collect_info"]
-    assert "docstring" in result["collect_info"]
+    assert "docstring" in result["collect_info"], f"Expected 'docstring' in {result['collect_info']}"
+    # Print the result for debugging
+    print("Result of inspect_library:")
+    print(result)
 
 # You can add more tests here to cover other scenarios and edge cases
