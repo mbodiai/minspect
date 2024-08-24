@@ -162,7 +162,7 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False
     if docs:
         docstring = inspectlib.getdoc(module)
         if docstring:
-            collected_info["docstring"] = docstring
+            collected_info["docstring"] = docstring.strip()
     render_dict(collected_info)
     return collected_info
 
