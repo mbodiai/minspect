@@ -114,7 +114,7 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
         if docs:
             docstring = inspectlib.getdoc(member_obj)
             if docstring:
-                member_info["docstring"] = docstring
+                member_info["docstring"] = docstring.strip()
 
         if signatures and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
             try:
@@ -158,11 +158,11 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
 def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = False, code: bool = False, imports: bool = False) -> Dict[str, Any]:
     console = Console()
     console.print(f"[bold cyan]{module.__name__}[/bold cyan]:")
+    collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
     if docs:
         docstring = inspectlib.getdoc(module)
         if docstring:
-            console.print(Markdown(docstring))
-    collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
+            collected_info["docstring"] = docstring
     render_dict(collected_info)
     return collected_info
 
