@@ -16,7 +16,13 @@ from minspect.inspecting import inspect_library
 def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
     """Inspect a Python module or class. Optionally create a markdown file."""
     result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
-    print(result)
+    for name, info in result.items():
+        print(f"{name}:")
+        if 'signature' in info:
+            print(f"  Signature: {info['signature']}")
+        if 'docstring' in info:
+            print(f"  Docstring: {info['docstring'][:50]}...")
+        print()
 
 if __name__ == '__main__':
     cli()

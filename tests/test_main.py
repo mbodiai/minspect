@@ -13,3 +13,4 @@ def test_cli_with_options():
     assert result.exit_code == 0
     assert "minspect" in result.output
     assert "Signature:" in result.output
+    assert "Docstring:" in result.output
