@@ -54,11 +54,11 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
                     print(f"  Type: {info['type']}")
                 if 'path' in info:
                     print(f"  Path: {info['path']}")
-                if (sigs or all) and 'signature' in info:
+                if 'signature' in info:
                     print(f"  Signature: {info['signature']}")
-                if (docs or all) and 'docstring' in info:
+                if 'docstring' in info:
                     print(f"  Docstring: {info['docstring']}")
-                if (code or all) and 'code' in info:
+                if 'code' in info:
                     print(f"  Source Code:\n{info['code']}")
                 print()
                 if 'members' in info:
@@ -69,15 +69,15 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
                             print(f"      Type: {member_info['type']}")
                         if 'path' in member_info:
                             print(f"      Path: {member_info['path']}")
-                        if (sigs or all) and 'signature' in member_info:
+                        if 'signature' in member_info:
                             print(f"      Signature: {member_info['signature']}")
-                        if (docs or all) and 'docstring' in member_info:
+                        if 'docstring' in member_info:
                             print(f"      Docstring: {member_info['docstring']}")
-                        if (code or all) and 'code' in member_info:
+                        if 'code' in member_info:
                             print(f"      Source Code:\n{member_info['code']}")
                         print()
         return 0
-    except ImportError as e:
+    except ImportError:
         print(f"Error: Module '{module_or_class}' not found.", file=sys.stderr)
         return 1
     except Exception as e:
