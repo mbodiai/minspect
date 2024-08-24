@@ -75,13 +75,13 @@ def generate_panels(console, result, sigs, docs, code):
         for name, info in result.items():
             try:
                 panel_content = generate_panel_content(name, info, sigs, docs, code)
-                console.print(Panel(panel_content, expand=False))
+                console.print(Panel(panel_content, expand=False, width=120))
                 
                 if isinstance(info, dict) and 'members' in info:
                     console.print("\n[bold]Members:[/bold]")
                     for member_name, member_info in info['members'].items():
                         member_panel = generate_panel_content(member_name, member_info, sigs, docs, code)
-                        console.print(Panel(member_panel, expand=False))
+                        console.print(Panel(member_panel, expand=False, width=120))
             except Exception as e:
                 console.print(f"[bold red]Error processing {name}:[/bold red] {str(e)}")
     else:
@@ -97,9 +97,9 @@ def generate_panel_content(name, info, sigs, docs, code):
         if sigs and 'signature' in info:
             content += f"\n[bold]Signature:[/bold]\n{info['signature']}\n"
         if docs and 'docstring' in info:
-            content += f"\n[bold]Docstring:[/bold]\n{info['docstring']}\n"
+            content += f"\n[bold]Docstring:[/bold]\n{info['docstring'][:500]}{'...' if len(info['docstring']) > 500 else ''}\n"
         if code and 'code' in info:
-            content += f"\n[bold]Source Code:[/bold]\n{info['code']}\n"
+            content += f"\n[bold]Source Code:[/bold]\n{info['code'][:500]}{'...' if len(info['code']) > 500 else ''}\n"
     else:
         content += f"{info}\n"
     return content

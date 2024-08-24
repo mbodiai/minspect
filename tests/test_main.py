@@ -72,8 +72,8 @@ def test_cli_with_invalid_module():
     result = runner.invoke(cli, ["nonexistent_module"])
     print(f"Debug: CLI output:\n{result.output}")
     print(f"Debug: Exit code: {result.exit_code}")
-    assert result.exit_code == 1
-    assert "Error: Module 'nonexistent_module' not found." in result.output
+    assert result.exit_code == 1, f"Expected exit code 1, but got {result.exit_code}"
+    assert "Error: Module 'nonexistent_module' not found." in result.output, "Expected error message not found in output"
 
 def test_cli_with_valid_module():
     runner = CliRunner()
