@@ -229,11 +229,11 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
                 try:
                     obj = import_module(f"{obj.__name__}.{part}")
                 except ImportError:
-                    raise AttributeError(f"'{obj.__name__}' has no attribute '{part}'")
-    except ImportError as e:
-        raise ImportError(f"Error importing module {module_name}: {e}")
-    except AttributeError as e:
-        raise AttributeError(f"Error accessing attribute {part} in {obj}: {e}")
+                    return None  # Return None if module or attribute is not found
+    except ImportError:
+        return None  # Return None if module is not found
+    except AttributeError:
+        return None  # Return None if attribute is not found
 
     if all:
         signatures = docs = code = imports = True
