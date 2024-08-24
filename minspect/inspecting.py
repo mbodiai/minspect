@@ -74,12 +74,13 @@ def get_full_name(obj):
     """
     Returns the full package, module, and class name (if applicable) for classes, functions, modules, and class member functions.
     """
-    if inspectlib.isclass(obj) or inspectlib.isfunction(obj):
+    if inspectlib.isclass(obj):
         return f"{obj.__module__}.{obj.__name__}"
-    elif inspectlib.ismethod(obj):
-        # For class member functions, include the class name in the path
-        class_name = obj.__self__.__class__.__name__
-        return f"{obj.__module__}.{class_name}.{obj.__name__}"
+    elif inspectlib.isfunction(obj) or inspectlib.ismethod(obj):
+        if hasattr(obj, '__qualname__'):
+            return f"{obj.__module__}.{obj.__qualname__}"
+        else:
+            return f"{obj.__module__}.{obj.__name__}"
     elif inspectlib.ismodule(obj):
         return obj.__name__
     else:
@@ -103,6 +104,8 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
             continue
         if is_imported(obj, member_obj) and not imports:
             continue
+        if inspectlib.isbuiltin(member_obj):
+            continue
 
         member_info = {}
         member_info["type"] = "class" if inspectlib.isclass(member_obj) else "module" if inspectlib.ismodule(member_obj) else "function" if inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj) else "attribute"
@@ -114,7 +117,10 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
                 member_info["docstring"] = docstring
 
         if signatures and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
-            member_info["signature"] = str(inspectlib.signature(member_obj))
+            try:
+                member_info["signature"] = str(inspectlib.signature(member_obj))
+            except ValueError:
+                member_info["signature"] = "Signature not available"
 
         if code and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
             try:
