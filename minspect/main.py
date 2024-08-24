@@ -37,7 +37,7 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
             generate_panels(console, result, sigs, docs, code)
         return 0
     except ImportError as e:
-        console.print(f"[bold red]Error:[/bold red] Module '{module_or_class}' not found. {str(e)}", style="red")
+        console.print(f"[bold red]Error importing module {module_or_class}:[/bold red] {str(e)}", style="red")
         return 1
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
