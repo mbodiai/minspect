@@ -159,16 +159,35 @@ def collect_info(obj: Any, depth: int = 1, current_depth: int = 0, signatures: b
 
 from rich.table import Table
 
-def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
+from rich.console import Console
+from rich.table import Table
+from rich.markdown import Markdown
+from typing import Dict, Any
+
+def render_dict(members_dict: Dict[str, Any], indent: int = 0, depth=0, max_depth=None) -> None:
+    if depth > max_depth:
+        return
     console = Console()
     table = Table(show_header=True, header_style="bold magenta")
-    table.add_column("Name", style="dim", width=20)
-    table.add_column("Type", style="dim")
-    table.add_column("Path", style="dim")
-    table.add_column("Signature", style="dim")
-    table.add_column("Docstring", style="dim")
+    table.add_column("Name", style=" white", width=20)
+    table.add_column("Type", style=" magenta")
+    table.add_column("Path", style="white")
+    table.add_column("Signature", style="yellow")
+    table.add_column("Docstring", style="white")
 
-    for name, info in members_dict.items():
+    def sort_key(item):
+        name, info = item
+        if not isinstance(info, dict):
+            return (3, name)  # Default to the end if not a dict
+        docstring_present = 0 if info.get("docstring") else 1
+        type_order = {"module": 0, "function": 1, "class": 2}
+        type_ = info.get("type", "")
+        type_rank = type_order.get(type_, 3)
+        return (docstring_present, type_rank, name)
+
+    sorted_members = sorted(members_dict.items(), key=sort_key)
+    
+    for name, info in sorted_members:
         if isinstance(info, dict):
             type_ = info.get("type", "")
             path = info.get("path", "")
@@ -177,7 +196,7 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
             
             # Truncate long strings
             docstring = (docstring[:50] + '...') if len(docstring) > 50 else docstring
-            signature = (signature[:50] + '...') if len(signature) > 50 else signature
+            signature = (signature[:20] + '...') if len(signature) > 20 else signature
 
             table.add_row(name, type_, path, signature, docstring)
         else:
@@ -186,11 +205,15 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
 
     console.print(table)
 
-    # Render nested members
-    for name, info in members_dict.items():
-        if isinstance(info, dict) and "members" in info:
-            console.print(f"\n[bold]Nested members of {name}:[/bold]")
-            render_dict(info["members"], indent + 2)
+    for name, info in sorted_members:
+        if not isinstance(info, dict):
+            continue
+        docstring = info.get("docstring", "")
+        signature = info.get("signature", "")
+        if docstring:
+            console.print(Markdown(f"**{name}:**\n```python\n{docstring}\n```"))
+        if info.get("members") and depth < max_depth + 1:
+            render_dict(info["members"], indent + 2, depth + 1, max_depth)
 
 def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True, code: bool = False, imports: bool = False) -> Dict[str, Any]:
     """
@@ -210,16 +233,18 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True,
     console = Console()
     console.print(f"[bold cyan]Inspecting: {module.__name__}[/bold cyan]")
     collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-    render_dict(collected_info)
+    render_dict(collected_info, depth=0, max_depth=depth)
     return collected_info
 
 def inspect_library(module_or_class, depth, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
-    print(f"Debug: inspect_library called with module_or_class={module_or_class}, depth={depth}, signatures={signatures}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
     parts = module_or_class.split(".")
     module_name = parts[0]
     obj = None
 
-    try:
+    def import_module_(module_name):
+        sys_args = sys.argv.copy()
+        sys.argv = sys.argv[:1] if len(sys.argv) > 1 else sys.argv
+
         module = import_module(module_name)
         obj = module
         for part in parts[1:]:
@@ -231,6 +256,15 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
                 except ImportError:
                     print(f"Debug: Attribute or module not found: {part}")
                     raise ImportError(f"Module or attribute not found: {module_or_class}")
+        sys_args = sys_args[1:]
+        return obj
+    try:
+        obj = import_module_(module_name)
+      
+    except ModuleNotFoundError as e:
+        sys.path.append(".")
+        obj = import_module_(module_name)
+
     except ImportError as e:
         print(f"Debug: Import error: {e}")
         raise
@@ -243,7 +277,6 @@ def inspect_library(module_or_class, depth, signatures=True, docs=True, code=Fal
     
     try:
         result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-        print(f"Debug: get_info returned result: {result}")
         if not result:
             print("Debug: get_info returned empty result")
             raise ImportError(f"Unable to inspect module: {module_or_class}")
