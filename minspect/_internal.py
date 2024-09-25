@@ -71,6 +71,7 @@ def _namespace(obj):
     >>> _namespace(p)
     [\'functools\', \'partial\']
     """
+    from minspect._source import getname, _intypes
     # mostly for functions and modules and such
     # FIXME: 'wrong' for decorators and curried functions
     try:  # XXX: needs some work and testing on different types
@@ -105,7 +106,7 @@ def _namespace(obj):
     return qual
 
 def getimport(obj, alias="", verify=True, builtin=False, enclosing=False):
-    """get the likely import string for the given object
+    """Get the likely import string for the given object.
 
     obj is the object to inspect
     If verify=True, then test the import string before returning it.
@@ -114,7 +115,7 @@ def getimport(obj, alias="", verify=True, builtin=False, enclosing=False):
     If alias is provided, then rename the object on import.
     """
     if enclosing:
-        from minspect._source import outermost
+        from minspect._source import _getimport, outermost
 
         _obj = outermost(obj)
         obj = _obj if _obj else obj
@@ -127,12 +128,7 @@ def getimport(obj, alias="", verify=True, builtin=False, enclosing=False):
         name = repr(obj).split("<", 1)[1].split(">", 1)[1]
         name = None  # we have a 'object'-style repr
     except Exception:  # it's probably something 'importable'
-        if head in ["builtins", "__builtin__"]:
-            name = repr(obj)  # XXX: catch [1,2], (1,2), set([1,2])... others?
-        else:
-            name = repr(obj).split("(")[0]
-    # if not repr(obj).startswith('<'): name = repr(obj).split('(')[0]
-    # else: name = None
+        name = repr(obj) if head in ["builtins", "__builtin__"] else repr(obj).split("(")[0]
     if name:  # try using name instead of tail
         try:
             return _getimport(head, name, alias, verify, builtin)
