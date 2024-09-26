@@ -1,0 +1,6 @@
+[submodule "tiktokenizer"]
+	path = tiktokenizer
+	url = https://github.com/shadcn/tiktokenizer.git
+[submodule "storybook-vue-tailwind"]
+	path = storybook-vue-tailwind
+	url = https://github.com/shadcn/storybook-vue-tailwind

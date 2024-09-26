@@ -420,6 +420,7 @@ def getblocks(object, lstrip=False, enclosing=False, locate=False):
 
 def getsourcelines(object, lstrip=False, enclosing=False):
     """Return a list of source lines and starting line number for an object.
+
     Interactively-defined objects refer to lines in the interpreter's history.
 
     The argument may be a module, class, method, function, traceback, frame,
@@ -430,7 +431,8 @@ def getsourcelines(object, lstrip=False, enclosing=False):
     raised for objects where the source code is unavailable (e.g. builtins).
 
     If lstrip=True, ensure there is no indentation in the first line of code.
-    If enclosing=True, then also return any enclosing code."""
+    If enclosing=True, then also return any enclosing code.
+    """
     code, n = getblocks(object, lstrip=lstrip, enclosing=enclosing, locate=True)
     return code[-1], n[-1]
 
@@ -441,7 +443,7 @@ def _hascode(object):
 
 
 def _isinstance(object):
-    """True if object is a class instance type (and is not a builtin)"""
+    """True if object is a class instance type (and is not a builtin)."""
     if _hascode(object) or isclass(object) or ismodule(object):
         return False
     if istraceback(object) or isframe(object) or iscode(object):
@@ -455,13 +457,8 @@ def _isinstance(object):
     _types = ("<class ", "<type 'instance'>")
     if not repr(type(object)).startswith(_types):  # FIXME: weak hack
         return False
-    if (
-        not getmodule(object)
-        or object.__module__ in ["builtins", "__builtin__"]
-        or getname(object, force=True) in ["array"]
-    ):
-        return False
-    return True  # by process of elimination... it's what we want
+    return not (getmodule(object) and object.__module__ not in ["builtins", "__builtin__"] and getname(object, force=True) not in ["array"])
+
 
 
 def _intypes(object):

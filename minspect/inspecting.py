@@ -52,14 +52,12 @@ def get_root_module(module):
     elif hasattr(module, "__package__"):
         return module.__package__
     return None
+
 def is_imported(module, obj):
     try:
         logging.debug(f"root module of obj {obj}: {get_root_module(inspectlib.getmodule(obj))}")
         logging.debug(f"root module of module {module}: {get_root_module(inspectlib.getmodule(module))}")
-        if get_root_module(inspectlib.getmodule(obj)) == get_root_module(inspectlib.getmodule(module)):
-            return False
-
-        return True
+        return get_root_module(inspectlib.getmodule(obj)) != get_root_module(inspectlib.getmodule(module))
     except Exception as e:
         traceback.print_exc()
         print(f"Error checking if {obj} is imported from {module}: {e}")
@@ -193,8 +191,7 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0) -> None:
             render_dict(info["members"], indent + 2)
 
 def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True, code: bool = False, imports: bool = False) -> Dict[str, Any]:
-    """
-    Get information about the given module and its members.
+    """Get information about the given module and its members.
 
     Args:
         module: The module to inspect.
@@ -213,8 +210,8 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True,
     render_dict(collected_info)
     return collected_info
 
-def inspect_library(module_or_class, depth, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
-    print(f"Debug: inspect_library called with module_or_class={module_or_class}, depth={depth}, signatures={signatures}, docs={docs}, code={code}, imports={imports}, all={all}, markdown={markdown}")
+def inspect_library(module_or_class, depth,*, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
+  
     parts = module_or_class.split(".")
     module_name = parts[0]
     obj = None

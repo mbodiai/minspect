@@ -338,8 +338,8 @@ def _stash_modules(main_module):
             # Trick _is_imported_module() to force saving as an imported module.
             newmod.__loader__ = True  # will be discarded by save_module()
         return newmod
-    else:
-        return main_module
+
+    return main_module
 
 
 def _restore_modules(unpickler, main_module):
@@ -456,9 +456,7 @@ def dump_module(
     refimported = kwds.pop("byref", refimported)
     module = kwds.pop("main", module)
 
-    from .settings import settings
-
-    protocol = settings["protocol"]
+    protocol = "pickle"
     main = module
     if main is None:
         main = _main_module
@@ -560,8 +558,7 @@ def _identify_module(file, main=None):
 def load_module(
     filename: Union[str, os.PathLike] = None, module: Optional[Union[ModuleType, str]] = None, **kwds
 ) -> Optional[ModuleType]:
-    """Update the selected module (default is :py:mod:`__main__`) with
-    the state saved at ``filename``.
+    """Update the selected module (default is :py:mod:`__main__`) with the state saved at ``filename``.
 
     Restore a module to the state saved with :py:func:`dump_module`. The
     saved module can be :py:mod:`__main__` (e.g. an interpreter session),
