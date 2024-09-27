@@ -1,6 +1,7 @@
+from typing import Any
+
 from rich.markdown import Markdown as Markdown
 from rich.syntax import Syntax as Syntax
-from typing import Any
 
 def load_all_modules(mod) -> list[tuple[str, Any]]: ...
 def is_standard_lib(module): ...

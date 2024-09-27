@@ -2,12 +2,10 @@ import dis
 import re
 import sys
 from inspect import (
-    TokenError,
     findsource,
     getblock,
     getmodule,
     getsourcelines,
-    indent,
     indentsize,
     isclass,
     iscode,
@@ -17,13 +15,14 @@ from inspect import (
     ismodule,
     istraceback,
 )
+from tokenize import TokenError
 from types import ModuleType
 
-from minspect._internal import _namespace, getimport, getname
+from minspect._internal import _namespace, getimport
 
 
 def _intypes(object):
-    """check if object is in the 'types' module"""
+    """Check if object is in the 'types' module."""
     import types
 
     # allow user to pass in object or object.__name__
@@ -35,7 +34,7 @@ def _intypes(object):
 
 
 def _isinstance(object):
-    """True if object is a class instance type (and is not a builtin)"""
+    """True if object is a class instance type (and is not a builtin)."""
     if _hascode(object) or isclass(object) or ismodule(object):
         return False
     if istraceback(object) or isframe(object) or iscode(object):
@@ -49,7 +48,7 @@ def _isinstance(object):
     _types = ("<class ", "<type 'instance'>")
     if not repr(type(object)).startswith(_types):  # FIXME: weak hack
         return False
-    if (
+    if (  # noqa: SIM103
         not getmodule(object)
         or object.__module__ in ["builtins", "__builtin__"]
         or getname(object, force=True) in ["array"]
@@ -62,7 +61,7 @@ def _import_module(import_name, safe=False):
     try:
         if import_name.startswith("__runtime__."):
             return sys.modules[import_name]
-        elif "." in import_name:
+        if "." in import_name:
             items = import_name.split(".")
             module = ".".join(items[:-1])
             obj = items[-1]
@@ -70,8 +69,8 @@ def _import_module(import_name, safe=False):
             if isinstance(submodule, ModuleType | type):
                 return submodule
             return __import__(import_name, None, None, [obj])
-        else:
-            return __import__(import_name)
+
+        return __import__(import_name)
     except (ImportError, AttributeError, KeyError):
         if safe:
             return None
@@ -91,12 +90,11 @@ def _getimport(head, tail, alias="", verify=True, builtin=False):
     if tail in ["Ellipsis", "NotImplemented"] and head in ["types"]:
         head = len.__module__
     elif tail in ["None"] and head in ["types"]:
-        _alias = "%s = " % alias if alias else ""
+        _alias = f"{alias} = " if alias else ""
         if alias == tail:
             _alias = ""
-        return _alias + "%s\n" % tail
-    # we don't need to import from builtins, so return ''
-    #   elif tail in ['NoneType','int','float','long','complex']: return '' #XXX: ?
+        return _alias + f"{tail}\n"
+
     if head in ["builtins", "__builtin__"]:
         # special cases (NoneType, Ellipsis, ...) #XXX: BuiltinFunctionType
         if tail == "ellipsis":

@@ -1,10 +1,11 @@
 import sys
-from click import argument, command, option, help_option
+from io import StringIO
+
+from click import argument, command, help_option, option
 from rich.console import Console
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.syntax import Syntax
-from rich.markdown import Markdown
-from io import StringIO
 
 from minspect.inspecting import inspect_library
 
@@ -27,7 +28,7 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown):
         if all:
             sigs = docs = code = imports = True
         print(f"Debug: sigs={sigs}, docs={docs}, code={code}, imports={imports}, all={all}")
-        result = inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
+        result = inspect_library(module_or_class, depth,signatures=sigs, docs=docs, code=code, imports=imports)
         print(f"Debug: Result from inspect_library: {result}")
         
         if result:

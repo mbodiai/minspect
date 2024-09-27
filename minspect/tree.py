@@ -10,7 +10,6 @@ import tempfile
 import warnings
 from functools import partial
 from inspect import (
-    indent,
     indentsize,
     iscode,
     isframe,

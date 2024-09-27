@@ -1,10 +1,10 @@
+import contextlib
 import gc
 import sys
 from inspect import getmodule, getsource, ismodule
 from types import ModuleType
 
 import __main__ as _main_module  # noqa
-import contextlib
 
 try:
     import ctypes
@@ -71,7 +71,7 @@ def _namespace(obj):
     >>> _namespace(p)
     [\'functools\', \'partial\']
     """
-    from minspect._source import getname, _intypes
+    from minspect._source import _intypes, getname
     # mostly for functions and modules and such
     # FIXME: 'wrong' for decorators and curried functions
     try:  # XXX: needs some work and testing on different types

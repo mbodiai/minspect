@@ -1,5 +1,6 @@
 import inspect as inspectlib
 import logging
+from pathlib import Path
 import sys
 import traceback
 from importlib import import_module
@@ -211,44 +212,28 @@ def get_info(module, depth: int = 1, signatures: bool = True, docs: bool = True,
     return collected_info
 
 def inspect_library(module_or_class, depth,*, signatures=True, docs=True, code=False, imports=False, all=False, markdown=False):
-  
-    parts = module_or_class.split(".")
-    module_name = parts[0]
-    obj = None
+    import importlib.util
 
-    try:
-        module = import_module(module_name)
-        obj = module
-        for part in parts[1:]:
-            if hasattr(obj, part):
-                obj = getattr(obj, part)
-            else:
-                try:
-                    obj = import_module(f"{obj.__name__}.{part}")
-                except ImportError:
-                    print(f"Debug: Attribute or module not found: {part}")
-                    raise ImportError(f"Module or attribute not found: {module_or_class}")
-    except ImportError as e:
-        print(f"Debug: Import error: {e}")
-        raise
-    except AttributeError as e:
-        print(f"Debug: Attribute error: {e}")
-        raise ImportError(f"Attribute not found: {module_or_class}")
 
-    if all:
-        signatures = docs = code = imports = True
-    
-    try:
-        result = get_info(obj, depth, signatures=signatures, docs=docs, code=code, imports=imports)
-        print(f"Debug: get_info returned result: {result}")
-        if not result:
-            print("Debug: get_info returned empty result")
-            raise ImportError(f"Unable to inspect module: {module_or_class}")
-    except Exception as e:
-        print(f"Debug: Exception in get_info: {e}")
-        raise ImportError(f"Error inspecting module: {module_or_class}")
-    
-    return result
+    def find_module_spec(module_name):
+        spec = importlib.util.find_spec(module_name)
+        if spec is None:
+            raise ImportError(f"No module named {module_name}")
+        print(f"Found module {module_name} at {spec.origin}")
+        return spec
+
+    from rich import inspect as rich_inspect
+
+    from minspect._source import _import_module
+
+    m = find_module_spec(module_or_class)
+    if m is None:
+        print(f"Module {module_or_class} not found.")
+        return
+    m = _import_module(module_or_class)
+
+    return get_info(m, depth, signatures, docs, code, imports)
+        
 
 def inspect_repo(repo_path, depth, signatures, docs, code, imports, all):
     
@@ -289,7 +274,7 @@ def inspect_cli(module_or_class, depth, sigs, docs, code, imports,all, markdown=
         mode (str): The level of detail to include in the inspection.
         markdown (bool): Return the inspection results as Markdown.
     """     
-    return inspect_library(module_or_class, depth, sigs, docs, code, imports, all, markdown)
+    return inspect_library(module_or_class, depth, signatures=sigs, docs=docs, code=code, imports=imports, all=all, markdown=markdown)
 
 if __name__ == "__main__":
     inspect_cli()

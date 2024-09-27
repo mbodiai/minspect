@@ -55,6 +55,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=8.0.0" },
+    { name = "minspect", editable = "." },
     { name = "rich" },
 ]
 
