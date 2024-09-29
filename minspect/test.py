@@ -163,7 +163,7 @@ if __name__ == "__main__":
     import argparse
     from mbpy.commands import run_cmd
     from importlib import reload
-    from minspect._source import _import_module
+    from minspect.source import _import_module
     parser = argparse.ArgumentParser(description="Generate collapsed nested Markdown documentation for a Python module or specific attribute.")
     parser.add_argument("module_name", help="Name of the Python module (e.g., 'math_operations')")
     parser.add_argument("--access", help="Specific class or callable in the format 'module:Class.method' or 'module.Class.method'", default=None)

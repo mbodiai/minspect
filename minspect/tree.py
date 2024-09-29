@@ -71,9 +71,10 @@ _reverse_typemap.update(
 )
 
 
-def getname(obj, force=False, fqn=False): #XXX: throw(?) to raise error on fail?
+def getname(obj,*, force=False, fully_qualified_name=False): #XXX: throw(?) to raise error on fail?
     """Get the name of the object. for lambdas, get the name of the pointer."""
-    if fqn: return '.'.join(_namespace(obj))
+    if fully_qualified_name:
+         return '.'.join(_namespace(obj))
     module = getmodule(obj)
     if not module: # things like "None" and "1"
         if not force: return None
@@ -88,10 +89,11 @@ def getname(obj, force=False, fqn=False): #XXX: throw(?) to raise error on fail?
         if module.__name__ in ['builtins','__builtin__'] and name == 'ellipsis':
              name = 'EllipsisType'
         return name
-    except AttributeError: #XXX: better to just throw AttributeError ?
-        if not force: return None
+    except AttributeError: 
+        if not force:
+             return None
         name = repr(obj)
-        if name.startswith('<'): # or name.split('('):
+        if name.startswith('<'): 
             return None
         return name
 

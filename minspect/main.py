@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from click import argument, command, option, help_option
 from rich.console import Console
@@ -21,14 +22,14 @@ from minspect.inspecting import inspect_library
 @option("--markdown", "-md", is_flag=True, help="Output as markdown")
 @option("--output", "-o", type=str, help="Output file")
 @option("--compact", "-cpt", is_flag=True, help="Compact output")
-def cli(module_or_classes, depth, sigs, docs, code, imports, all, markdown, output, compact):
+def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown, output, compact):
     """Inspect a Python module or class. Optionally create a markdown file."""
-    console = Console()
+    console = Console(record=output is not None)
     try:
         if all:
             sigs = docs = code = imports = True
         result, renderables = inspect_library(
-            module_or_classes, depth, sigs, docs, code, imports, all, markdown, stack=[]
+            module_or_class, depth, sigs, docs, code, imports, all, markdown, stack=[]
         )
 
         if result:
@@ -48,8 +49,15 @@ def cli(module_or_classes, depth, sigs, docs, code, imports, all, markdown, outp
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
+
+   
     for renderable in renderables:
-        console.print(renderable())
+        console.print(renderable)
+        if output:
+            with console.capture() as capture:
+                console.print(renderable())
+            with open(output, "a") as f:
+                f.write(str(capture._console.export_svg()))
     return None
 
 

@@ -16,6 +16,9 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.syntax import Syntax
 from rich.table import Table
+from rich.pretty import pretty_repr as rich_repr
+from rich import inspect as rich_inspect
+import contextlib
 
 
 def load_all_modules(mod) -> list[tuple[str, Any]]:
@@ -133,7 +136,6 @@ def collect_info(
             continue
         if inspectlib.isbuiltin(member_obj) and obj.__name__ != "math":
             continue
-
         member_info = {}
         member_info["type"] = (
             "class"
@@ -144,20 +146,21 @@ def collect_info(
             if inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)
             else "attribute"
         )
-        member_info["path"] = get_full_name(member_obj)
+        member_info["fqn"] = get_full_name(member_obj)
+        member_info["path"] = member_obj.__path__ if hasattr(member_obj, "__path__") else None
 
         if docs:
             docstring = inspectlib.getdoc(member_obj)
             if docstring:
-                member_info["docstring"] = docstring.strip()
-
+                member_info["doc"] = inspectlib.cleandoc(docstring)
         if signatures and (
             inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj) or inspectlib.isclass(member_obj)
         ):
-            try:
-                member_info["signature"] = str(inspectlib.signature(member_obj))
-            except ValueError:
-                member_info["signature"] = "Signature not available"
+            with contextlib.suppress(ValueError):
+                sig = inspectlib.signature(member_obj)
+                member_info["signature"] = {"params": {
+                    name: param.annotation for name, param in sig.parameters.items() if param.annotation != param.empty
+                }, "return": sig.return_annotation}
 
         if code and (inspectlib.isfunction(member_obj) or inspectlib.ismethod(member_obj)):
             try:
@@ -171,12 +174,6 @@ def collect_info(
 
         members_dict[member] = member_info
 
-    # Add docstring for the object itself
-    if docs:
-        obj_docstring = inspectlib.getdoc(obj)
-        if obj_docstring:
-            members_dict["docstring"] = obj_docstring.strip()
-
     return members_dict
 
 
@@ -184,23 +181,24 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0, depth=0, max_dept
     if depth > max_depth:
         return
     console = Console()
+    title = members_dict.get("Name", "Unknown")
     table = Table(
         show_header=True,
         header_style="bold magenta",
         expand=True,
-        title=f"Members for {members_dict.get('Name', 'Unknown')}",
+        title=f"Members for {title}",
+        title_justify="left",
+        caption_justify="left",
     )
-    table.add_column("Name", style=" white", width=20)
-    table.add_column("Type", style=" magenta")
-    table.add_column("Path", style="white", width=40)
-    table.add_column("Signature", style="yellow", no_wrap=True)
-    table.add_column("Docstring", style="white")
+    table.add_column("Name", style=" white", no_wrap=True)
+    table.add_column("Path", style="white", no_wrap=True)
+    table.add_column("Sig",  no_wrap=True)
 
     def sort_key(item):
         name, info = item
         if not isinstance(info, dict):
             return (3, name)  # Default to the end if not a dict
-        docstring_present = 0 if info.get("docstring") else 1
+        docstring_present = 0 if info.get("doc") else 1
         type_order = {"module": 0, "function": 1, "class": 2}
         type_ = info.get("type", "")
         type_rank = type_order.get(type_, 3)
@@ -210,33 +208,37 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0, depth=0, max_dept
 
     add_row = False
     for name, info in sorted_members:
+
         add_row = True
         if isinstance(info, dict):
             type_ = info.get("type", "")
-            path = info.get("path", "")
+            if type_ == "class":
+                name = f"[bold blue] class {name}[/bold blue ]"
+            elif type_ == "module":
+                name = f"[bold magenta] {name}[/bold magenta]"
+            elif type_ == "function":
+                name = f"[green] def {name}[/green]"
+            path = f"[link] file://{info["path"]}[/link]" if info.get("path") else ""
             signature = info.get("signature", "")
-            docstring = info.get("docstring", "")
+            signature =  Syntax(rich_repr(info.get("signature")), "python")  if signature else "\n"
 
-            # Truncate long strings
-            docstring = (docstring[:50] + "...") if len(docstring) > 50 else docstring
-
-            table.add_row(name, type_, path, signature, docstring)
+            table.add_row(name, path, signature)
         else:
             # Handle string values
-            table.add_row(name, "Value", "", "", str(info))
+            table.add_row(name, "", info)
 
-    for name, info in sorted_members:
+    for _, info in sorted_members:
         if not isinstance(info, dict):
             continue
-        docstring = info.get("docstring", "")
-        signature = info.get("signature", "")
-        if docstring:
-            console.print(Markdown(f"**{name}:**\n```python\n{docstring}\n```"))
         if info.get("members") and depth < max_depth + 1:
             render_dict(info["members"], indent, depth + 1, max_depth, stack)
     if isinstance(stack, list) and add_row:
         stack.append(partial(console.print, table))
-        # stack.append(partial(console.print, f"[bold blue]Members For {current_name}:[/bold blue]"))
+        if members_dict.get("doc"):
+            stack.append(partial(console.print, f"[bold green]{members_dict.get("doc")}[/bold green]"))
+        if members_dict.get("signature"):
+            stack.append(partial(console.print, Syntax(members_dict.get("signature"), "python")))
+        stack.append(partial(console.print, f"[bold blue]{title}:[/bold blue]"))
     return stack
 
 
@@ -262,8 +264,6 @@ def get_info(
     Returns:
         Dict[str, Any]: A dictionary containing the collected information.
     """
-    if hasattr(module, "__path__"):
-        link = module.__path__[0]
     console = Console()
     console.print(f"[bold cyan] Inspecting: {module.__name__}[/bold cyan]")
     collected_info = collect_info(module, depth, signatures=signatures, docs=docs, code=code, imports=imports)
@@ -316,7 +316,12 @@ def inspect_library(
 
     except ImportError as e:
         print(f"Debug: Import error: {e}")
-        raise
+        try:
+            from minspect.source import importmodule
+            obj = importmodule(module_name)
+        except ImportError as e:
+            print(f"Debug: Import error: {e}")
+            raise ImportError(f"Module not found: {module_or_class}")
     except AttributeError as e:
         print(f"Debug: Attribute error: {e}")
         raise ImportError(f"Attribute not found: {module_or_class}")
