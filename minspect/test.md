@@ -1,0 +1,443 @@
+<details><summary><h1>Module: pydantic</h1></summary>
+<b>Module-level attributes:</b>
+  - **AfterValidator**
+  - **AliasChoices**
+  - **AliasGenerator**
+  - **AliasPath**
+  - **AllowInfNan**
+  - **AmqpDsn**
+  - **AnyHttpUrl**
+  - **AnyUrl**
+  - **AnyWebsocketUrl**
+  - **AwareDatetime**
+  - **Base64Bytes**
+  - **Base64Encoder**
+  - **Base64Str**
+  - **Base64UrlBytes**
+  - **Base64UrlStr**
+  - **BaseConfig**
+  - **BaseModel**
+  - **BeforeValidator**
+  - **ByteSize**
+  - **ClickHouseDsn**
+  - **CockroachDsn**
+  - **ConfigDict**
+  - **DirectoryPath**
+  - **Discriminator**
+  - **EmailStr**
+  - **EncodedBytes**
+  - **EncodedStr**
+  - **EncoderProtocol**
+  - **Extra**
+  - **Field**
+  - **FieldSerializationInfo**
+  - **FilePath**
+  - **FileUrl**
+  - **FiniteFloat**
+  - **FtpUrl**
+  - **FutureDate**
+  - **FutureDatetime**
+  - **GenerateSchema**
+  - **GetCoreSchemaHandler**
+  - **GetJsonSchemaHandler**
+  - **GetPydanticSchema**
+  - **HttpUrl**
+  - **IPvAnyAddress**
+  - **IPvAnyInterface**
+  - **IPvAnyNetwork**
+  - **ImportString**
+  - **InstanceOf**
+  - **Json**
+  - **JsonValue**
+  - **KafkaDsn**
+  - **MariaDBDsn**
+  - **MongoDsn**
+  - **MySQLDsn**
+  - **NaiveDatetime**
+  - **NameEmail**
+  - **NatsDsn**
+  - **NegativeFloat**
+  - **NegativeInt**
+  - **NewPath**
+  - **NonNegativeFloat**
+  - **NonNegativeInt**
+  - **NonPositiveFloat**
+  - **NonPositiveInt**
+  - **OnErrorOmit**
+  - **PastDate**
+  - **PastDatetime**
+  - **PaymentCardNumber**
+  - **PlainSerializer**
+  - **PlainValidator**
+  - **PositiveFloat**
+  - **PositiveInt**
+  - **PostgresDsn**
+  - **PrivateAttr**
+  - **PydanticDeprecatedSince20**
+  - **PydanticDeprecatedSince26**
+  - **PydanticDeprecationWarning**
+  - **PydanticErrorCodes**
+  - **PydanticImportError**
+  - **PydanticInvalidForJsonSchema**
+  - **PydanticSchemaGenerationError**
+  - **PydanticUndefinedAnnotation**
+  - **PydanticUserError**
+  - **RedisDsn**
+  - **RootModel**
+  - **Secret**
+  - **SecretBytes**
+  - **SecretStr**
+  - **SerializationInfo**
+  - **SerializeAsAny**
+  - **SerializerFunctionWrapHandler**
+  - **SkipValidation**
+  - **Strict**
+  - **StrictBool**
+  - **StrictBytes**
+  - **StrictFloat**
+  - **StrictInt**
+  - **StrictStr**
+  - **StringConstraints**
+  - **Tag**
+  - **TypeAdapter**
+  - **UUID1**
+  - **UUID3**
+  - **UUID4**
+  - **UUID5**
+  - **UrlConstraints**
+  - **VERSION**
+  - **ValidationError**
+  - **ValidationInfo**
+  - **ValidatorFunctionWrapHandler**
+  - **WebsocketUrl**
+  - **WithJsonSchema**
+  - **WrapSerializer**
+  - **WrapValidator**
+  - **computed_field**
+  - **conbytes**
+  - **condate**
+  - **condecimal**
+  - **confloat**
+  - **confrozenset**
+  - **conint**
+  - **conlist**
+  - **conset**
+  - **constr**
+  - **create_model**
+  - **dataclasses**
+  - **field_serializer**
+  - **field_validator**
+  - **model_serializer**
+  - **model_validator**
+  - **parse_obj_as**
+  - **root_validator**
+  - **schema_json_of**
+  - **schema_of**
+  - **validate_call**
+  - **validate_email**
+  - **validator**
+  - **with_config**
+<b>Attributes (from AST):</b>
+  - **__version__**
+  - **__all__**
+  - **_getattr_migration**
+  - **ValidationError**
+  - **dynamic_attr**
+  - **unknown**
+  - **module**
+<details><summary><b>__getattr__</b></summary>
+  - **Signature**: `def __getattr__(attr_name)`
+  - **Documentation**: None
+</details>
+<details><summary><b>__dir__</b></summary>
+  - **Signature**: `def __dir__()`
+  - **Documentation**: None
+</details>
+</details>
+<details><summary><h1>Submodule: pydantic._internal</h1></summary>
+<details><summary><h2>Module: pydantic._internal</h2></summary>
+<i>Source code unavailable for pydantic._internal</i>
+</details>
+<details><summary><h1>Submodule: pydantic.deprecated</h1></summary>
+<details><summary><h2>Module: pydantic.deprecated</h2></summary>
+<b>Module-level attributes:</b>
+  - **class_validators**
+  - **config**
+  - **copy_internals**
+  - **decorator**
+  - **json**
+  - **parse**
+  - **tools**
+<i>Source code unavailable for pydantic.deprecated</i>
+</details>
+<details><summary><h1>Submodule: pydantic.plugin</h1></summary>
+<details><summary><h2>Module: pydantic.plugin</h2></summary>
+<b>Module-level attributes:</b>
+  - **Any**
+  - **BaseValidateHandlerProtocol**
+  - **Callable**
+  - **CoreConfig**
+  - **CoreSchema**
+  - **Literal**
+  - **NamedTuple**
+  - **NewSchemaReturns**
+  - **Protocol**
+  - **PydanticPluginProtocol**
+  - **SchemaKind**
+  - **SchemaTypePath**
+  - **StringInput**
+  - **TypeAlias**
+  - **ValidateJsonHandlerProtocol**
+  - **ValidatePythonHandlerProtocol**
+  - **ValidateStringsHandlerProtocol**
+  - **ValidationError**
+  - **annotations**
+<b>Attributes (from AST):</b>
+  - **__all__**
+<details><summary><b>SchemaTypePath</b></summary>
+  - **Signature**: `class SchemaTypePath(NamedTuple)`
+  - **Documentation**: Path defining where `schema_type` was defined, or where `TypeAdapter` was called.
+</details>
+<details><summary><b>PydanticPluginProtocol</b></summary>
+  - **Signature**: `class PydanticPluginProtocol(Protocol)`
+  - **Documentation**: Protocol defining the interface for Pydantic plugins.
+</details>
+<details><summary><b>BaseValidateHandlerProtocol</b></summary>
+  - **Signature**: `class BaseValidateHandlerProtocol(Protocol)`
+  - **Documentation**: Base class for plugin callbacks protocols.
+
+You shouldn't implement this protocol directly, instead use one of the subclasses with adds the correctly
+typed `on_error` method.
+</details>
+<details><summary><b>ValidatePythonHandlerProtocol</b></summary>
+  - **Signature**: `class ValidatePythonHandlerProtocol(BaseValidateHandlerProtocol, Protocol)`
+  - **Documentation**: Event handler for `SchemaValidator.validate_python`.
+</details>
+<details><summary><b>ValidateJsonHandlerProtocol</b></summary>
+  - **Signature**: `class ValidateJsonHandlerProtocol(BaseValidateHandlerProtocol, Protocol)`
+  - **Documentation**: Event handler for `SchemaValidator.validate_json`.
+</details>
+<details><summary><b>ValidateStringsHandlerProtocol</b></summary>
+  - **Signature**: `class ValidateStringsHandlerProtocol(BaseValidateHandlerProtocol, Protocol)`
+  - **Documentation**: Event handler for `SchemaValidator.validate_strings`.
+</details>
+</details>
+</details>
+<details><summary><h1>Submodule: pydantic.v1</h1></summary>
+<details><summary><h2>Module: pydantic.v1</h2></summary>
+<b>Module-level attributes:</b>
+  - **AmqpDsn**
+  - **AnyHttpUrl**
+  - **AnyStrMaxLengthError**
+  - **AnyStrMinLengthError**
+  - **AnyUrl**
+  - **ArbitraryTypeError**
+  - **BaseConfig**
+  - **BaseModel**
+  - **BaseSettings**
+  - **BoolError**
+  - **ByteSize**
+  - **BytesError**
+  - **CallableError**
+  - **ClassError**
+  - **CockroachDsn**
+  - **ColorError**
+  - **ConfigDict**
+  - **ConfigError**
+  - **ConstrainedBytes**
+  - **ConstrainedDate**
+  - **ConstrainedDecimal**
+  - **ConstrainedFloat**
+  - **ConstrainedFrozenSet**
+  - **ConstrainedInt**
+  - **ConstrainedList**
+  - **ConstrainedSet**
+  - **ConstrainedStr**
+  - **DataclassTypeError**
+  - **DateError**
+  - **DateNotInTheFutureError**
+  - **DateNotInThePastError**
+  - **DateTimeError**
+  - **DecimalError**
+  - **DecimalIsNotFiniteError**
+  - **DecimalMaxDigitsError**
+  - **DecimalMaxPlacesError**
+  - **DecimalWholeDigitsError**
+  - **DictError**
+  - **DirectoryPath**
+  - **DurationError**
+  - **EmailError**
+  - **EmailStr**
+  - **EnumError**
+  - **EnumMemberError**
+  - **Extra**
+  - **ExtraError**
+  - **Field**
+  - **FilePath**
+  - **FileUrl**
+  - **FiniteFloat**
+  - **FloatError**
+  - **FrozenSetError**
+  - **FrozenSetMaxLengthError**
+  - **FrozenSetMinLengthError**
+  - **FutureDate**
+  - **HashableError**
+  - **HttpUrl**
+  - **IPv4AddressError**
+  - **IPv4InterfaceError**
+  - **IPv4NetworkError**
+  - **IPv6AddressError**
+  - **IPv6InterfaceError**
+  - **IPv6NetworkError**
+  - **IPvAnyAddress**
+  - **IPvAnyAddressError**
+  - **IPvAnyInterface**
+  - **IPvAnyInterfaceError**
+  - **IPvAnyNetwork**
+  - **IPvAnyNetworkError**
+  - **IntEnumError**
+  - **IntegerError**
+  - **InvalidByteSize**
+  - **InvalidByteSizeUnit**
+  - **InvalidDiscriminator**
+  - **InvalidLengthForBrand**
+  - **Json**
+  - **JsonError**
+  - **JsonTypeError**
+  - **JsonWrapper**
+  - **KafkaDsn**
+  - **ListError**
+  - **ListMaxLengthError**
+  - **ListMinLengthError**
+  - **ListUniqueItemsError**
+  - **LuhnValidationError**
+  - **MissingDiscriminator**
+  - **MissingError**
+  - **MongoDsn**
+  - **NameEmail**
+  - **NegativeFloat**
+  - **NegativeInt**
+  - **NonNegativeFloat**
+  - **NonNegativeInt**
+  - **NonPositiveFloat**
+  - **NonPositiveInt**
+  - **NoneBytes**
+  - **NoneIsAllowedError**
+  - **NoneIsNotAllowedError**
+  - **NoneStr**
+  - **NoneStrBytes**
+  - **NotDigitError**
+  - **NotNoneError**
+  - **NumberNotGeError**
+  - **NumberNotGtError**
+  - **NumberNotLeError**
+  - **NumberNotLtError**
+  - **NumberNotMultipleError**
+  - **PastDate**
+  - **PathError**
+  - **PathNotADirectoryError**
+  - **PathNotAFileError**
+  - **PathNotExistsError**
+  - **PatternError**
+  - **PaymentCardNumber**
+  - **PositiveFloat**
+  - **PositiveInt**
+  - **PostgresDsn**
+  - **PrivateAttr**
+  - **Protocol**
+  - **PyObject**
+  - **PyObjectError**
+  - **PydanticTypeError**
+  - **PydanticValueError**
+  - **RedisDsn**
+  - **Required**
+  - **SecretBytes**
+  - **SecretField**
+  - **SecretStr**
+  - **SequenceError**
+  - **SetError**
+  - **SetMaxLengthError**
+  - **SetMinLengthError**
+  - **StrBytes**
+  - **StrError**
+  - **StrRegexError**
+  - **StrictBool**
+  - **StrictBoolError**
+  - **StrictBytes**
+  - **StrictFloat**
+  - **StrictInt**
+  - **StrictStr**
+  - **SubclassError**
+  - **TimeError**
+  - **TupleError**
+  - **TupleLengthError**
+  - **UUID1**
+  - **UUID3**
+  - **UUID4**
+  - **UUID5**
+  - **UUIDError**
+  - **UUIDVersionError**
+  - **UrlError**
+  - **UrlExtraError**
+  - **UrlHostError**
+  - **UrlHostTldError**
+  - **UrlPortError**
+  - **UrlSchemeError**
+  - **UrlSchemePermittedError**
+  - **UrlUserInfoError**
+  - **VERSION**
+  - **ValidationError**
+  - **WrongConstantError**
+  - **annotated_types**
+  - **class_validators**
+  - **color**
+  - **compiled**
+  - **conbytes**
+  - **condate**
+  - **condecimal**
+  - **config**
+  - **confloat**
+  - **confrozenset**
+  - **conint**
+  - **conlist**
+  - **conset**
+  - **constr**
+  - **create_model**
+  - **create_model_from_namedtuple**
+  - **create_model_from_typeddict**
+  - **dataclasses**
+  - **datetime_parse**
+  - **decorator**
+  - **env_settings**
+  - **error_wrappers**
+  - **errors**
+  - **fields**
+  - **generics**
+  - **json**
+  - **main**
+  - **networks**
+  - **parse**
+  - **parse_file_as**
+  - **parse_obj_as**
+  - **parse_raw_as**
+  - **root_validator**
+  - **schema**
+  - **schema_json_of**
+  - **schema_of**
+  - **stricturl**
+  - **tools**
+  - **types**
+  - **typing**
+  - **utils**
+  - **v1**
+  - **validate_arguments**
+  - **validate_email**
+  - **validate_model**
+  - **validator**
+  - **validators**
+  - **version**
+<b>Attributes (from AST):</b>
+  - **__version__**
+  - **__all__**
+</details>
+</details>

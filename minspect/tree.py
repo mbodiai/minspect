@@ -30,7 +30,7 @@ from typing import Optional, Union
 from minspect._internal import _isinstance, _main_module, _module_map, _namespace
 from minspect._internal import _locate_object as at
 from minspect._internal import _proxy_helper as reference
-from minspect._source import getmodule, getsource
+from minspect.source import getmodule, getsource
 
 try:
     import ctypes
@@ -96,7 +96,7 @@ def getname(obj, force=False, fqn=False): #XXX: throw(?) to raise error on fail?
         return name
 
 
-def _outdent(lines, spaces=None, all=True):
+def _outdent(lines, spaces=None, all=True): # noqa: A002
     """Outdent lines of code, accounting for docs and line continuations."""
     indent = indentsize(lines[0])
     if spaces is None or spaces > indent or spaces < 0:

@@ -5,7 +5,6 @@ from inspect import (
     findsource,
     getblock,
     getmodule,
-    getsourcelines,
     indentsize,
     isclass,
     iscode,
@@ -15,49 +14,14 @@ from inspect import (
     ismodule,
     istraceback,
 )
+from pickle import dumps
 from tokenize import TokenError
 from types import ModuleType
 
 from minspect._internal import _namespace, getimport
 
 
-def _intypes(object):
-    """Check if object is in the 'types' module."""
-    import types
-
-    # allow user to pass in object or object.__name__
-    if type(object) is not str:
-        object = getname(object, force=True)  # noqa
-    if object == "ellipsis":
-        object = "EllipsisType"  # noqa
-    return hasattr(types, object)
-
-
-def _isinstance(object):
-    """True if object is a class instance type (and is not a builtin)."""
-    if _hascode(object) or isclass(object) or ismodule(object):
-        return False
-    if istraceback(object) or isframe(object) or iscode(object):
-        return False
-    # special handling (numpy arrays, ...)
-    if not getmodule(object) and getmodule(type(object)).__name__ in ["numpy"]:
-        return True
-    #   # check if is instance of a builtin
-    #   if not getmodule(object) and getmodule(type(object)).__name__ in ['__builtin__','builtins']:
-    #       return False
-    _types = ("<class ", "<type 'instance'>")
-    if not repr(type(object)).startswith(_types):  # FIXME: weak hack
-        return False
-    if (  # noqa: SIM103
-        not getmodule(object)
-        or object.__module__ in ["builtins", "__builtin__"]
-        or getname(object, force=True) in ["array"]
-    ):
-        return False
-    return True  # by process of elimination... it's what we want
-
-
-def _import_module(import_name, safe=False):
+def importmodule(import_name: str, safe=False):
     try:
         if import_name.startswith("__runtime__."):
             return sys.modules[import_name]
@@ -84,7 +48,7 @@ def _getimport(head, tail, alias="", verify=True, builtin=False):
 
     If verify=True, then test the import string before returning it.
     If builtin=True, then force an import for builtins where possible.
-    If alias is provided, then rename the object on import.
+    If alias is provided, then rename the obj on import.
     """
     # special handling for a few common types
     if tail in ["Ellipsis", "NotImplemented"] and head in ["types"]:
@@ -99,17 +63,17 @@ def _getimport(head, tail, alias="", verify=True, builtin=False):
         # special cases (NoneType, Ellipsis, ...) #XXX: BuiltinFunctionType
         if tail == "ellipsis":
             tail = "EllipsisType"
-        if _intypes(tail):
+        if isintypes(tail):
             head = "types"
         elif not builtin:
-            _alias = "%s = " % alias if alias else ""
+            _alias = f"{alias} = " if alias else ""
             if alias == tail:
                 _alias = ""
-            return _alias + "%s\n" % tail
+            return _alias + f"{tail}\n"
         else:
             pass  # handle builtins below
     # get likely import string
-    _str = f"import {tail}" if not head else "from %s import %s" % (head, tail)
+    _str = f"import {tail}" if not head else f"from {head} import {tail}"
     _alias = f" as {alias}\n" if alias else "\n"
     if alias == tail:
         _alias = "\n"
@@ -130,7 +94,7 @@ def _getimport(head, tail, alias="", verify=True, builtin=False):
 
 
 def getname(obj, force=False, fqn=False):  # XXX: throw(?) to raise error on fail?
-    """Get the name of the object. For lambdas, get the name of the pointer."""
+    """Get the name of the obj. For lambdas, get the name of the pointer."""
     if fqn:
         return ".".join(_namespace(obj))
     module = getmodule(obj)
@@ -171,7 +135,7 @@ def _outdent(lines, spaces=None, all=True):
 
 
 def outdent(code, spaces=None, all=True):
-    """outdent a block of code (default is to strip all leading whitespace)"""
+    """Outdent a block of code (default is to strip all leading whitespace)."""
     indent = indentsize(code)
     if spaces is None or spaces > indent or spaces < 0:
         spaces = indent
@@ -181,34 +145,32 @@ def outdent(code, spaces=None, all=True):
     return "\n".join(_outdent(code.split("\n"), spaces=spaces, all=all))
 
 
-def _enclose(object, alias=""):  # FIXME: needs alias to hold returned object
-    """Create a function enclosure around the source of some object."""
-    # XXX: dummy and stub should append a random string
+def _enclose(obj, alias=""):  # FIXME: needs alias to hold returned obj
+    """Create a function enclosure around the source of some obj."""
     dummy = "__this_is_a_big_dummy_enclosing_function__"
+
     stub = "__this_is_a_stub_variable__"
     code = f"def {dummy}():\n"
-    code += indent(getsource(object, alias=stub, lstrip=True, force=True))
+    code += indent(getsource(obj, alias=stub, lstrip=True, force=True))
     code += indent(f"return {stub}\n")
     if alias:
         code += f"{alias} = "
     code += f"{dummy}(); del {dummy}\n"
-    # code += "globals().pop('%s',lambda :None)()\n" % dummy
     return code
 
-def dumpsource(object, alias="", new=False, enclose=True):
-    """'dump to source', where the code includes a pickled object.
+def dumpsource(obj, alias="", new=False, enclose=True):
+    """'dump to source', where the code includes a pickled obj.
 
-    If new=True and object is a class instance, then create a new
+    If new=True and obj is a class instance, then create a new
     instance using the unpacked class source code. If enclose, then
-    create the object inside a function enclosure (thus minimizing
+    create the obj inside a function enclosure (thus minimizing
     any global namespace pollution).
     """
-    from mlink import dumps
-
-    pik = repr(dumps(object))
+    mlink = importmodule("mlink", safe=True)
+    pik = repr(mlink.dumps(obj))
     code = "import mlink\n"
     if enclose:
-        stub = "__this_is_a_stub_variable__"  # XXX: *must* be same _enclose.stub
+        stub = "__this_is_a_stub_variable__" 
         pre = f"{stub} = "
         new = False  # FIXME: new=True doesn't work with enclose=True
     else:
@@ -216,17 +178,16 @@ def dumpsource(object, alias="", new=False, enclose=True):
         pre = f"{stub} = " if alias else alias
 
     # if a 'new' instance is not needed, then just dump and load
-    if not new or not _isinstance(object):
+    if not new or not _isinstance(obj):
         code += pre + f"mlink.loads({pik})\n"
     else:  # XXX: other cases where source code is needed???
-        code += getsource(object.__class__, alias="", lstrip=True, force=True)
-        mod = repr(object.__module__)  # should have a module (no builtins here)
+        code += getsource(obj.__class__, alias="", lstrip=True, force=True)
+        mod = repr(obj.__module__)  # should have a module (no builtins here)
         code += pre + f'mlink.loads({pik}.replace(b{mod},bytes(__name__,"UTF-8")))\n'
-    # code += 'del %s' % object.__class__.__name__ #NOTE: kills any existing!
 
     if enclose:
         # generation of the 'enclosure'
-        dummy = "__this_is_a_big_dummy_object__"
+        dummy = "__this_is_a_big_dummy_obj__"
         dummy = _enclose(dummy, alias=alias)
         # hack to replace the 'dummy' with the 'real' code
         dummy = dummy.split("\n")
@@ -235,57 +196,57 @@ def dumpsource(object, alias="", new=False, enclose=True):
     return code  # XXX: better 'dumpsourcelines', returning list of lines?
 
 
-def getsource(object, alias="", lstrip=False, enclosing=False, force=False, builtin=False):
-    """Return the text of the source code for an object.
+def getsource(obj, alias="", lstrip=False, enclosing=False, force=False, builtin=False):
+    """Return the text of the source code for an obj.
 
     The source code for
-    interactively-defined objects are extracted from the interpreter's history.
+    interactively-defined objs are extracted from the interpreter's history.
 
     The argument may be a module, class, method, function, traceback, frame,
-    or code object.  The source code is returned as a single string.  An
+    or code obj.  The source code is returned as a single string.  An
     IOError is raised if the source code cannot be retrieved, while a
-    TypeError is raised for objects where the source code is unavailable
+    TypeError is raised for objs where the source code is unavailable
     (e.g. builtins).
 
-    If alias is provided, then add a line of code that renames the object.
+    If alias is provided, then add a line of code that renames the obj.
     If lstrip=True, ensure there is no indentation in the first line of code.
     If enclosing=True, then also return any enclosing code.
     If force=True, catch (TypeError,IOError) and try to use import hooks.
     If builtin=True, force an import for any builtins
     """
     # hascode denotes a callable
-    hascode = _hascode(object)
+    hascode = _hascode(obj)
     # is a class instance type (and not in builtins)
-    instance = _isinstance(object)
+    instance = _isinstance(obj)
 
     # get source lines; if fail, try to 'force' an import
-    try:  # fails for builtins, and other assorted object types
-        lines, lnum = getsourcelines(object, enclosing=enclosing)
+    try:  # fails for builtins, and other assorted obj types
+        lines, lnum = getsourcelines(obj, enclosing=enclosing)
     except (TypeError, IOError):  # failed to get source, resort to import hooks
         if not force:  # don't try to get types that findsource can't get
             raise
-        if not getmodule(object):  # get things like 'None' and '1'
+        if not getmodule(obj):  # get things like 'None' and '1'
             if not instance:
-                return getimport(object, alias, builtin=builtin)
+                return getimport(obj, alias, builtin=builtin)
             # special handling (numpy arrays, ...)
-            _import = getimport(object, builtin=builtin)
-            name = getname(object, force=True)
-            _alias = "%s = " % alias if alias else ""
+            _import = getimport(obj, builtin=builtin)
+            name = getname(obj, force=True)
+            _alias = f"{alias} = " if alias else ""
             if alias == name:
                 _alias = ""
             return _import + _alias + "%s\n" % name
-        else:  # FIXME: could use a good bit of cleanup, since using getimport...
-            if not instance:
-                return getimport(object, alias, builtin=builtin)
-            # now we are dealing with an instance...
-            name = object.__class__.__name__
-            module = object.__module__
-            if module in ["builtins", "__builtin__"]:
-                return getimport(object, alias, builtin=builtin)
-            else:  # FIXME: leverage getimport? use 'from module import name'?
-                lines, lnum = ["%s = __import__('%s', fromlist=['%s']).%s\n" % (name, module, name, name)], 0
-                obj = eval(lines[0].lstrip(name + " = "))
-                lines, lnum = getsourcelines(obj, enclosing=enclosing)
+
+        if not instance:
+            return getimport(obj, alias, builtin=builtin)
+        # now we are dealing with an instance...
+        name = obj.__class__.__name__
+        module = obj.__module__
+        if module in ["builtins", "__builtin__"]:
+            return getimport(obj, alias, builtin=builtin)
+
+        lines, lnum = [f"{name} = __import__('{module}', fromlist=['{name}']).{name}\n"], 0
+        obj = eval(lines[0].lstrip(name + " = "))  # noqa: S307
+        lines, lnum = getsourcelines(obj, enclosing=enclosing)
 
     # strip leading indent (helps ensure can be imported)
     if lstrip or alias:
@@ -293,16 +254,15 @@ def getsource(object, alias="", lstrip=False, enclosing=False, force=False, buil
 
     # instantiate, if there's a nice repr  #XXX: BAD IDEA???
     if instance:  # and force: #XXX: move into findsource or getsourcelines ?
-        if "(" in repr(object):
-            lines.append("%r\n" % object)
+        if "(" in repr(obj):
+            lines.append("%r\n" % obj)
         # else: #XXX: better to somehow to leverage __reduce__ ?
-        #    reconstructor,args = object.__reduce__()
+        #    reconstructor,args = obj.__reduce__()
         #    _ = reconstructor(*args)
         else:  # fall back to serialization #XXX: bad idea?
             # XXX: better not duplicate work? #XXX: better new/enclose=True?
-            lines = dumpsource(object, alias="", new=force, enclose=False)
+            lines = dumpsource(obj, alias="", new=force, enclose=False)
             lines, lnum = [line + "\n" for line in lines.split("\n")][:-1], 0
-    # else: object.__code__ # raise AttributeError
 
     # add an alias to the source code
     if alias:
@@ -314,29 +274,29 @@ def getsource(object, alias="", lstrip=False, enclosing=False, force=False, buil
                 skip += 1
             # XXX: use regex from findsource / getsourcelines ?
             if lines[skip].lstrip().startswith("def "):  # we have a function
-                if alias != object.__name__:
-                    lines.append("\n%s = %s\n" % (alias, object.__name__))
+                if alias != obj.__name__:
+                    lines.append(f"\n{alias} = {obj.__name__}\n")
             elif "lambda " in lines[skip]:  # we have a lambda
                 if alias != lines[skip].split("=")[0].strip():
-                    lines[skip] = "%s = %s" % (alias, lines[skip])
-            else:  # ...try to use the object's name
-                if alias != object.__name__:
-                    lines.append("\n%s = %s\n" % (alias, object.__name__))
+                    lines[skip] = f"{alias} = {lines[skip]}"
+            else:  # ...try to use the obj's name
+                if alias != obj.__name__:
+                    lines.append(f"\n{alias} = {obj.__name__}\n")
         else:  # class or class instance
             if instance:
                 if alias != lines[-1].split("=")[0].strip():
-                    lines[-1] = ("%s = " % alias) + lines[-1]
+                    lines[-1] = (f"{alias} = ") + lines[-1]
             else:
-                name = getname(object, force=True) or object.__name__
+                name = getname(obj, force=True) or obj.__name__
                 if alias != name:
-                    lines.append("\n%s = %s\n" % (alias, name))
+                    lines.append(f"\n{alias} = {name}\n")
     return "".join(lines)
 
 
-def getblocks(object, lstrip=False, enclosing=False, locate=False):
-    """Return a list of source lines and starting line number for an object.
+def getblocks(obj,*, lstrip=False, enclosing=False, locate=False):
+    """Return a list of source lines and starting line number for an obj.
 
-    Interactively-defined objects refer to lines in the interpreter's history.
+    Interactively-defined objs refer to lines in the interpreter's history.
 
     If enclosing=True, then also return any enclosing code.
     If lstrip=True, ensure there is no indentation in the first line of code.
@@ -344,9 +304,9 @@ def getblocks(object, lstrip=False, enclosing=False, locate=False):
 
     DEPRECATED: use 'getsourcelines' instead
     """
-    lines, lnum = findsource(object)
+    lines, lnum = findsource(obj)
 
-    if ismodule(object):
+    if ismodule(obj):
         if lstrip:
             lines = _outdent(lines)
         return ([lines], [0]) if locate is True else [lines]
@@ -416,68 +376,41 @@ def getblocks(object, lstrip=False, enclosing=False, locate=False):
     return (blocks, _lnum) if locate is True else blocks
 
 
-def getsourcelines(object, lstrip=False, enclosing=False):
-    """Return a list of source lines and starting line number for an object.
-
-    Interactively-defined objects refer to lines in the interpreter's history.
-
-    The argument may be a module, class, method, function, traceback, frame,
-    or code object.  The source code is returned as a list of the lines
-    corresponding to the object and the line number indicates where in the
-    original source file the first line of code was found.  An IOError is
-    raised if the source code cannot be retrieved, while a TypeError is
-    raised for objects where the source code is unavailable (e.g. builtins).
-
-    If lstrip=True, ensure there is no indentation in the first line of code.
-    If enclosing=True, then also return any enclosing code.
-    """
-    code, n = getblocks(object, lstrip=lstrip, enclosing=enclosing, locate=True)
-    return code[-1], n[-1]
+def hascode(obj):
+    """True if obj has an attribute that stores it's __code__."""
+    return getattr(obj, "__code__", None) or getattr(obj, "func_code", None)
 
 
-def _hascode(object):
-    """True if object has an attribute that stores it's __code__"""
-    return getattr(object, "__code__", None) or getattr(object, "func_code", None)
-
-
-def _isinstance(object):
-    """True if object is a class instance type (and is not a builtin)."""
-    if _hascode(object) or isclass(object) or ismodule(object):
+def isanyinstance(obj):
+    """True if obj is a class instance type (and is not a builtin)."""
+    if hascode(obj) or isclass(obj) or ismodule(obj):
         return False
-    if istraceback(object) or isframe(object) or iscode(object):
+    if istraceback(obj) or isframe(obj) or iscode(obj):
         return False
     # special handling (numpy arrays, ...)
-    if not getmodule(object) and getmodule(type(object)).__name__ in ["numpy"]:
+    if not getmodule(obj) and getmodule(type(obj)).__name__ in ["numpy"]:
         return True
-    #   # check if is instance of a builtin
-    #   if not getmodule(object) and getmodule(type(object)).__name__ in ['__builtin__','builtins']:
-    #       return False
     _types = ("<class ", "<type 'instance'>")
-    if not repr(type(object)).startswith(_types):  # FIXME: weak hack
+    if not repr(type(obj)).startswith(_types):  # FIXME: weak hack
         return False
-    return not (getmodule(object) and object.__module__ not in ["builtins", "__builtin__"] and getname(object, force=True) not in ["array"])
+    return not (getmodule(obj) and obj.__module__ not in ["builtins", "__builtin__"] and getname(obj, force=True) not in ["array"])
 
 
 
-def _intypes(object):
-    """check if object is in the 'types' module"""
+def isintypes(obj):
+    """Check if obj is in the 'types' module."""
     import types
 
-    # allow user to pass in object or object.__name__
-    if type(object) is not type(""):
-        object = getname(object, force=True)
-    if object == "ellipsis":
-        object = "EllipsisType"
-    return True if hasattr(types, object) else False
-
-
-def _isstring(object):  # XXX: isstringlike better?
-    """check if object is a string-like type"""
-    return isinstance(object, (str, bytes))
+    # allow user to pass in obj or obj.__name__
+    if type(obj) is not str:
+        obj = getname(obj, force=True)
+    if obj == "ellipsis":
+        obj = "EllipsisType"
+    return hasattr(types, obj)
 
 
 def indent(code, spaces=4):
-    """indent a block of code with whitespace (default is 4 spaces)"""
+    """Indent a block of code with whitespace (default is 4 spaces)."""
     indent = indentsize(code)
     if type(spaces) is int:
         spaces = " " * spaces
@@ -493,47 +426,54 @@ def indent(code, spaces=4):
         if indent > _indent:
             continue
         lines[i] = spaces + lines[i]
-    ##      #FIXME: may fail when stq and dtq in same line (depends on ordering)
-    ##      nstq, ndtq = lines[i].count(stq), lines[i].count(dtq)
-    ##      if not in_dtq and not in_stq:
-    ##          lines[i] = spaces+lines[i] # we indent
-    ##          # entering a comment block
-    ##          if nstq%2: in_stq = not in_stq
-    ##          if ndtq%2: in_dtq = not in_dtq
-    ##      # leaving a comment block
-    ##      elif in_dtq and ndtq%2: in_dtq = not in_dtq
-    ##      elif in_stq and nstq%2: in_stq = not in_stq
-    ##      else: pass
     if lines[-1].strip() == "":
         lines[-1] = ""
     return "\n".join(lines)
 
 
-def getmodule(object, _filename=None, force=False):
-    """get the module of the object"""
+def getmodule(obj, filename=None, force=False):
+    """Get the module of the obj."""
     from inspect import getmodule as getmod
 
-    module = getmod(object, _filename)
+    module = getmod(obj, filename)
     if module or not force:
         return module
     import builtins
-    from .source import getname
 
-    name = getname(object, force=True)
-    return builtins if name in vars(builtins).keys() else None
+    from minspect.source import getname
+
+    name = getname(obj, force=True)
+    return builtins if name in vars(builtins) else None
 
 
-def outermost(func):  # is analogous to getsource(func,enclosing=True)
-    """get outermost enclosing object (i.e. the outer function in a closure)
+def getsourcelines(obj, lstrip=False, enclosing=False):
+    """Return a list of source lines and starting line number for an obj.
 
-    NOTE: this is the object-equivalent of getsource(func, enclosing=True)
+    Interactively-defined objs refer to lines in the interpreter's history.
+
+    The argument may be a module, class, method, function, traceback, frame,
+    or code obj.  The source code is returned as a list of the lines
+    corresponding to the obj and the line number indicates where in the
+    original source file the first line of code was found.  An IOError is
+    raised if the source code cannot be retrieved, while a TypeError is
+    raised for objs where the source code is unavailable (e.g. builtins).
+
+    If lstrip=True, ensure there is no indentation in the first line of code.
+    If enclosing=True, then also return any enclosing code.
+    """
+    code, n = getblocks(obj, lstrip=lstrip, enclosing=enclosing, locate=True)
+    return code[-1], n[-1]
+
+
+def outermost(func):
+    """Get outermost enclosing obj (i.e. the outer function in a closure).
+
+    NOTE: this is the obj-equivalent of getsource(func, enclosing=True)
     """
     if ismethod(func):
         _globals = func.__func__.__globals__ or {}
     elif isfunction(func):
         _globals = func.__globals__ or {}
-    else:
-        return  # XXX: or raise? no matches
     _globals = _globals.items()
     # get the enclosing source
 
@@ -542,20 +482,20 @@ def outermost(func):  # is analogous to getsource(func,enclosing=True)
     except Exception:  # TypeError, IOError
         lines, lnum = [], None
     code = "".join(lines)
-    # get all possible names,objects that are named in the enclosing source
+    # get all possible names,objs that are named in the enclosing source
     _locals = ((name, obj) for (name, obj) in _globals if name in code)
-    # now only save the objects that generate the enclosing block
+    # now only save the objs that generate the enclosing block
     for name, obj in _locals:  # XXX: don't really need 'name'
         try:
             if getsourcelines(obj) == (lines, lnum):
                 return obj
-        except Exception:  # TypeError, IOError
+        except( TypeError, IOError):
             pass
-    return  # XXX: or raise? no matches
+    return None
 
 
 def nestedcode(func, recurse=True):  # XXX: or return dict of {co_name: co} ?
-    """get the code objects for any nested functions (e.g. in a closure)"""
+    """Get the code objs for any nested functions (e.g. in a closure)."""
     func = code(func)
     if not iscode(func):
         return []  # XXX: or raise? no matches
@@ -572,9 +512,9 @@ def nestedcode(func, recurse=True):  # XXX: or return dict of {co_name: co} ?
 
 
 def code(func):
-    """get the code object for the given function or method
+    """Get the code obj for the given function or method.
 
-    NOTE: use mbodi.source.getsource(CODEOBJ) to get the source code
+    NOTE: use minspect.source.getsource(CODEOBJ) to get the source code
     """
     if ismethod(func):
         func = func.__func__
@@ -589,47 +529,42 @@ def code(func):
     return
 
 
-# XXX: ugly: parse dis.dis for name after "<code object" in line and in globals?
+# XXX: ugly: parse dis.dis for name after "<code obj" in line and in globals?
 def referrednested(func, recurse=True):  # XXX: return dict of {__name__: obj} ?
-    """get functions defined inside of func (e.g. inner functions in a closure)
+    """Get functions defined inside of func (e.g. inner functions in a closure).
 
     NOTE: results may differ if the function has been executed or not.
     If len(nestedcode(func)) > len(referrednested(func)), try calling func().
-    If possible, python builds code objects, but delays building functions
+    If possible, python builds code objs, but delays building functions
     until func() is called.
     """
     import gc
 
     funcs = set()
-    # get the code objects, and try to track down by referrence
+    # get the code objs, and try to track down by referrence
     for co in nestedcode(func, recurse):
-        # look for function objects that refer to the code object
+        # look for function objs that refer to the code obj
         for obj in gc.get_referrers(co):
             # get methods
             _ = getattr(obj, "__func__", None)  # ismethod
-            if getattr(_, "__code__", None) is co:
-                funcs.add(obj)
-            # get functions
-            elif getattr(obj, "__code__", None) is co:
-                funcs.add(obj)
-            # get frame objects
-            elif getattr(obj, "f_code", None) is co:
-                funcs.add(obj)
-            # get code objects
-            elif hasattr(obj, "co_code") and obj is co:
+            if getattr(_, "__code__", None) is co or\
+                getattr(obj, "__code__", None) is co or\
+                getattr(obj, "f_code", None) is co or\
+                hasattr(obj, "co_code") and obj is co:
                 funcs.add(obj)
     #     frameobjs => func.__code__.co_varnames not in func.__code__.co_cellvars
     #     funcobjs => func.__code__.co_cellvars not in func.__code__.co_varnames
     #     frameobjs are not found, however funcobjs are...
     #     (see: test_mixins.quad ... and test_mixins.wtf)
-    #     after execution, code objects get compiled, and then may be found by gc
+    #     after execution, code objs get compiled, and then may be found by gc
     return list(funcs)
 
 
 def freevars(func):
-    """get objects defined in enclosing code that are referred to by func
+    """Get objs defined in enclosing code that are referred to by func.
 
-    returns a dict of {name:object}"""
+    returns a dict of {name:obj}
+    """
     if ismethod(func):
         func = func.__func__
     if isfunction(func):
@@ -649,27 +584,27 @@ def freevars(func):
     return dict(get_cell_contents())
 
 
-def nestedglobals(func, recurse=True):
+def nestedglobals(func, recurse=True) -> list:
     """Get the names of any globals found within func."""
     func = code(func)
     if func is None:
-        return list()
+        return []
     import sys
 
     from minspect._internal import capture
 
-    CAN_NULL = sys.hexversion >= 0x30B00A7  # NULL may be prepended >= 3.11a7
+    can_null = sys.hexversion >= 0x30B00A7  # NULL may be prepended >= 3.11a7
     names = set()
     with capture("stdout") as out:
         dis.dis(func) 
     for line in out.getvalue().splitlines():
         if "_GLOBAL" in line:
             name = line.split("(")[-1].split(")")[0]
-            if CAN_NULL:
+            if can_null:
                 names.add(name.replace("NULL + ", "").replace(" + NULL", ""))
             else:
                 names.add(name)
-    for co in getattr(func, "co_consts", tuple()):
+    for co in getattr(func, "co_consts", ()):
         if co and recurse and iscode(co):
             names.update(nestedglobals(co, recurse=True))
     return list(names)

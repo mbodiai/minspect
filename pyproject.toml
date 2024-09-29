@@ -23,6 +23,7 @@ classifiers = [
 
 dependencies = [
   "click>=8.0.0",
+  "mbpy>=1.11.5",
   "minspect",
   "rich",
 ]
@@ -108,7 +109,7 @@ select = [
 ignore = [
 "D100", "D101", "D104", "D106", "ANN101", "ANN102", "ANN003", "UP009", "ANN204",
 "B026", "ANN001", "ANN401", "ANN202", "D107", "D102", "D103", "E731", "UP006",
-"UP035", "ANN002", "PLW2901", "UP035", "UP006",
+"UP035", "ANN002", "PLW2901", "UP035", "UP006"
 ]
 fixable = ["ALL"]
 unfixable = []

@@ -4,7 +4,9 @@ import sys
 from inspect import getmodule, getsource, ismodule
 from types import ModuleType
 
-import __main__ as _main_module  # noqa
+import __main__ as _main_module
+
+from minspect.source import isintypes  # noqa
 
 try:
     import ctypes
@@ -17,7 +19,7 @@ except ImportError:
     IS_PYPY = False
 
 
-def _module_map():
+def modulemap():
     """Get map of imported modules."""
     from collections import defaultdict
     from types import SimpleNamespace
@@ -59,7 +61,7 @@ def capture(stream="stdout"):
         setattr(sys, stream, orig)
 
 
-def _namespace(obj):
+def namespaces(obj):
     r"""Return namespace hierarchy (as a list of names) for the given object.
     
     For an instance, find the class hierarchy.
@@ -71,10 +73,10 @@ def _namespace(obj):
     >>> _namespace(p)
     [\'functools\', \'partial\']
     """
-    from minspect._source import _intypes, getname
+    from minspect.source import _intypes, getname
     # mostly for functions and modules and such
     # FIXME: 'wrong' for decorators and curried functions
-    try:  # XXX: needs some work and testing on different types
+    with contextlib.suppress(AttributeError, TypeError, NameError):
         module = qual = str(getmodule(obj)).split()[1].strip(">").strip('"').strip("'")
         qual = qual.split(".")
         if ismodule(obj):
@@ -82,11 +84,10 @@ def _namespace(obj):
         # get name of a lambda, function, etc
         name = getname(obj) or obj.__name__  # failing, raise AttributeError
         # check special cases (NoneType, ...)
-        if module in ["builtins", "__builtin__"] and _intypes(name):
+        if module in ["builtins", "__builtin__"] and isintypes(name):
             return ["types"] + [name]
         return qual + [name]  # XXX: can be wrong for some aliased objects
-    except Exception:
-        pass
+
     # special case: numpy.inf and numpy.nan (we don't want them as floats)
     if str(obj) in ["inf", "nan", "Inf", "NaN"]:  # is more, but are they needed?
         return ["numpy"] + [str(obj)]
@@ -115,12 +116,12 @@ def getimport(obj, alias="", verify=True, builtin=False, enclosing=False):
     If alias is provided, then rename the object on import.
     """
     if enclosing:
-        from minspect._source import _getimport, outermost
+        from minspect.source import _getimport, outermost
 
         _obj = outermost(obj)
         obj = _obj if _obj else obj
     # get the namespace
-    qual = _namespace(obj)
+    qual = namespaces(obj)
     head = ".".join(qual[:-1])
     tail = qual[-1]
     # for named things... with a nice repr #XXX: move into _namespace?
@@ -195,3 +196,5 @@ def _locate_object(address, module=None):
     except TypeError as e:
         raise TypeError(f"'{str(address)}' is not a valid memory address") from e
     raise ReferenceError(f"Cannot reference object at '{address}'")
+
+
