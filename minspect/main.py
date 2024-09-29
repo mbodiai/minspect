@@ -49,15 +49,18 @@ def cli(module_or_class, depth, sigs, docs, code, imports, all, markdown, output
     except Exception as e:
         console.print(f"[bold red]Error:[/bold red] {str(e)}", style="red")
         return 1
-
+    for renderable in renderables:
+        console.print(renderable())
+    if output:
+          console.begin_capture()
    
     for renderable in renderables:
-        console.print(renderable)
-        if output:
-            with console.capture() as capture:
-                console.print(renderable())
-            with open(output, "a") as f:
-                f.write(str(capture._console.export_svg()))
+        console.print(renderable())
+    if output:
+        console.end_capture()
+        with open(output, "a") as f:
+            f.write(console.export_svg())
+
     return None
 
 
