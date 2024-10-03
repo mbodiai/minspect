@@ -1,4 +1,5 @@
 import builtins as __builtin__
+import contextlib
 import dis
 import gc
 import logging
@@ -18,6 +19,7 @@ from inspect import (
     istraceback,
 )
 from operator import attrgetter, itemgetter
+from pathlib import Path
 from pickle import Unpickler, UnpicklingError
 from types import (
     BuiltinMethodType,
@@ -30,7 +32,7 @@ from typing import Optional, Union
 from minspect._internal import _isinstance, _main_module, _module_map, _namespace
 from minspect._internal import _locate_object as at
 from minspect._internal import _proxy_helper as reference
-from minspect.source import getmodule, getsource
+from minspect.source import getmodule, getsource, indent
 
 try:
     import ctypes
@@ -557,8 +559,8 @@ def _identify_module(file, main=None):
 
 
 def load_module(
-    filename: Union[str, os.PathLike] = None, module: Optional[Union[ModuleType, str]] = None, **kwds
-) -> Optional[ModuleType]:
+    filename: str | os.PathLike = None, module: ModuleType | str | None = None, **kwds
+) -> ModuleType | None:
     """Update the selected module (default is :py:mod:`__main__`) with the state saved at ``filename``.
 
     Restore a module to the state saved with :py:func:`dump_module`. The
@@ -589,7 +591,6 @@ def load_module(
         a module instance wasn't provided with the argument ``main``.
 
     Examples:
-
         - Save the state of some modules:
 
           >>> import mbodi
@@ -651,7 +652,7 @@ def load_module(
     *Changed in version 0.3.6:* Function ``load_session()`` was renamed to
     ``load_module()``. Parameter ``main`` was renamed to ``module``.
 
-    See also:
+    See Also:
         :py:func:`load_module_asdict` to load the contents of module saved
         with :py:func:`dump_module` into a dictionary.
     """
@@ -678,14 +679,10 @@ def load_module(
         if main is None and pickle_main is not None:
             main = pickle_main
         if isinstance(main, str):
-            if main.startswith("__runtime__."):
-                # Create runtime module to load the session into.
-                main = ModuleType(main.partition(".")[-1])
-            else:
-                main = _import_module(main)
+            main = ModuleType(main.partition(".")[-1]) if main.startswith("__runtime__.") else _import_module(main)
         if main is not None:
             if not isinstance(main, ModuleType):
-                raise TypeError("%r is not a module" % main)
+                raise TypeError(f"{main!r} is not a module")
             unpickler._main = main
         else:
             main = unpickler._main
@@ -706,17 +703,15 @@ def load_module(
 
         # This is for find_class() to be able to locate it.
         if not is_main_imported:
-            runtime_main = "__runtime__.%s" % main.__name__
+            runtime_main = f"__runtime__.{main.__name__}"
             sys.modules[runtime_main] = main
 
         loaded = unpickler.load()
     finally:
         if not hasattr(filename, "read"):  # if newly opened file
             file.close()
-        try:
+        with contextlib.suppress(KeyError, NameError):
             del sys.modules[runtime_main]
-        except (KeyError, NameError):
-            pass
     assert loaded is main
     _restore_modules(unpickler, main)
     if main is _main_module or main is module:
@@ -725,17 +720,17 @@ def load_module(
         return main
 
 def _enclose(object, alias=""):  # FIXME: needs alias to hold returned object
-    """create a function enclosure around the source of some object"""
+    """Create a function enclosure around the source of some object."""
     # XXX: dummy and stub should append a random string
     dummy = "__this_is_a_big_dummy_enclosing_function__"
     stub = "__this_is_a_stub_variable__"
-    code = "def %s():\n" % dummy
+    code = f"def {dummy}():\n"
     code += indent(getsource(object, alias=stub, lstrip=True, force=True))
-    code += indent("return %s\n" % stub)
+    code += indent(f"return {stub}\n")
     if alias:
-        code += "%s = " % alias
-    code += "%s(); del %s\n" % (dummy, dummy)
-    # code += "globals().pop('%s',lambda :None)()\n" % dummy
+        code += f"{alias} = "
+    code += f"{dummy}(); del {dummy}\n"
+    # code += "globals().pop('%s',lambda :None)()\n" % dummy  # noqa: ERA001
     return code
 
 
@@ -781,14 +776,14 @@ def dumpsource(object, alias="", new=False, enclose=True):
 
 # Backward compatibility.
 def load_session(filename=None, main=None, **kwds):
-    warnings.warn("load_session() has been renamed load_module().", PendingDeprecationWarning)
+    warnings.warn("load_session() has been renamed load_module().", PendingDeprecationWarning, stacklevel=2)
     load_module(filename, module=main, **kwds)
 
 
 load_session.__doc__ = load_module.__doc__
 
 
-def load_module_asdict(filename: Union[str, os.PathLike] = None, update: bool = False, **kwds) -> dict:
+def load_module_asdict(filename: str | os.PathLike = None, update: bool = False, **kwds) -> dict:
     """Load the contents of a saved module into a dictionary.
 
     ``load_module_asdict()`` is the near-equivalent of::
@@ -846,7 +841,7 @@ def load_module_asdict(filename: Union[str, os.PathLike] = None, update: bool = 
     else:
         if filename is None:
             filename = str(TEMPDIR / "session.pkl")
-        file = open(filename, "rb")
+        file = Path(filename).open("rb") # noqa: SIM115
     try:
         file = _make_peekable(file)
         main_name = _identify_module(file)
@@ -874,7 +869,7 @@ def load_module_asdict(filename: Union[str, os.PathLike] = None, update: bool = 
     return main.__dict__
 
 def code(func):
-    """get the code object for the given function or method"""
+    """Get the code object for the given function or method."""
     if ismethod(func):
         func = func.__func__
     if isfunction(func):
@@ -887,39 +882,60 @@ def code(func):
         return func
     return None
 
+
+@contextlib.contextmanager
+def capture(stream="stdout"):
+    """Builds a context that temporarily replaces the given stream name.
+
+    >>> with capture("stdout") as out:
+    ...     print("foo!")
+    >>> print(out.getvalue())
+    foo!
+
+    """
+    import sys
+    from io import StringIO
+
+    orig = getattr(sys, stream)
+    setattr(sys, stream, StringIO())
+    try:
+        yield getattr(sys, stream)
+    finally:
+        setattr(sys, stream, orig)
+
 def nestedglobals(func, recurse=True):
-    """get the names of any globals found within func"""
+    """Get the names of any globals found within func."""
     func = code(func)
     if func is None:
-        return list()
+        return []
     import sys
-    from .temp import capture
 
-    CAN_NULL = sys.hexversion >= 0x30B00A7  # NULL may be prepended >= 3.11a7
+    can_null = sys.hexversion >= 0x30B00A7  # NULL may be prepended >= 3.11a7
     names = set()
     with capture("stdout") as out:
         dis.dis(func)  # XXX: dis.dis(None) disassembles last traceback
     for line in out.getvalue().splitlines():
         if "_GLOBAL" in line:
             name = line.split("(")[-1].split(")")[0]
-            if CAN_NULL:
+            if can_null:
                 names.add(name.replace("NULL + ", "").replace(" + NULL", ""))
             else:
                 names.add(name)
-    for co in getattr(func, "co_consts", tuple()):
+    for co in getattr(func, "co_consts", ()):
         if co and recurse and iscode(co):
             names.update(nestedglobals(co, recurse=True))
     return list(names)
 
 def referredglobals(func, recurse=True, builtin=False):
-    """get the names of objects in the global scope referred to by func"""
+    """Get the names of objects in the global scope referred to by func."""
     return globalvars(func, recurse, builtin).keys()
 
 
 def globalvars(func, recurse=True, builtin=False):
-    """get objects defined in global scope that are referred to by func
+    """Get objects defined in global scope that are referred to by func.
 
-    return a dict of {name:object}"""
+    return a dict of {name:object}
+    """
     if ismethod(func):
         func = func.__func__
     if isfunction(func):
@@ -967,13 +983,14 @@ def globalvars(func, recurse=True, builtin=False):
     else:
         return {}
     # NOTE: if name not in __globals__, then we skip it...
-    return dict((name, globs[name]) for name in func if name in globs)
+    return {name: globs[name] for name in func if name in globs}
 
 
 def varnames(func):
-    """get names of variables defined by func
+    """Get names of variables defined by func.
 
-    returns a tuple (local vars, local vars referrenced by nested functions)"""
+    returns a tuple (local vars, local vars referrenced by nested functions)
+    """
     func = code(func)
     if not iscode(func):
         return ()  # XXX: better ((),())? or None?

@@ -1,11 +1,14 @@
 import contextlib
 import gc
 import sys
+from ast import AST
 from inspect import getmodule, getsource, ismodule
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
+from typing import dataclass_transform
+
+from typing_extensions import Protocol, TypedDict
 
 import __main__ as _main_module
-
 from minspect.source import isintypes  # noqa
 
 try:
@@ -18,13 +21,32 @@ except ImportError:
     HAS_CTYPES = False
     IS_PYPY = False
 
+@dataclass_transform
+class ModuleMap(TypedDict, total=False):
+    by_name: dict[str, list[tuple[object, str]]]
+    by_id: dict[int, list[tuple[object, str, str]]]
+    top_level: dict[int, str]
+
+
+class CTree(TypedDict, total=False):
+    by_name: dict[str, list[tuple[object, str]]]
+    by_id: dict[int, list[tuple[object, str, str]]]
+    top_level: dict[int, str]
+    modules: dict[str, ModuleType]
+    classes: dict[str, type]
+    functions: dict[str, callable]
+    objects: dict[str, object]
+    ast: dict[str, AST]
+    source: dict[str, str]
+    ctx: dict[str, SimpleNamespace]
+    
+
 
 def modulemap():
     """Get map of imported modules."""
     from collections import defaultdict
-    from types import SimpleNamespace
 
-    modmap = SimpleNamespace(
+    modmap = ModuleMap(
         by_name=defaultdict(list),
         by_id=defaultdict(list),
         top_level={},
@@ -39,6 +61,12 @@ def modulemap():
             modmap.by_id[id(modobj)].append((modobj, objname, modname))
     return modmap
 
+
+def astdict(obj):
+    """Get dictionary of AST nodes for the given object."""
+    import ast
+
+    return {node.__class__.__name__: node for node in ast.walk(ast.parse(getsource(obj)))}
 
 @contextlib.contextmanager
 def capture(stream="stdout"):
@@ -73,7 +101,7 @@ def namespaces(obj):
     >>> _namespace(p)
     [\'functools\', \'partial\']
     """
-    from minspect.source import _intypes, getname
+    from minspect.source import getname
     # mostly for functions and modules and such
     # FIXME: 'wrong' for decorators and curried functions
     with contextlib.suppress(AttributeError, TypeError, NameError):
@@ -101,7 +129,7 @@ def namespaces(obj):
         # check special cases (NoneType, Ellipsis, ...)
         if qual[-1] == "ellipsis":
             qual[-1] = "EllipsisType"
-        if _intypes(qual[-1]):
+        if isintypes(qual[-1]):
             module = "types"  # XXX: BuiltinFunctionType
         qual = [module] + qual
     return qual

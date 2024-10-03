@@ -147,7 +147,7 @@ def collect_info(
             else "attribute"
         )
         member_info["fqn"] = get_full_name(member_obj)
-        member_info["path"] = member_obj.__path__ if hasattr(member_obj, "__path__") else None
+        member_info["path"] = member_obj.__file__ if hasattr(member_obj, "__file__") else None
 
         if docs:
             docstring = inspectlib.getdoc(member_obj)
@@ -215,10 +215,10 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0, depth=0, max_dept
             if type_ == "class":
                 name = f"[bold blue] class {name}[/bold blue ]"
             elif type_ == "module":
-                name = f"[bold magenta] {name}[/bold magenta]"
+                name = f"[bold red] {name}[/bold red]"
             elif type_ == "function":
                 name = f"[green] def {name}[/green]"
-            path = f"[link] file://{info["path"]}[/link]" if info.get("path") else ""
+            path = f"[link] file://{info['path']}[/link]" if info.get("path") else ""
             signature = info.get("signature", "")
             signature =  Syntax(rich_repr(info.get("signature")), "python")  if signature else "\n"
 
@@ -235,7 +235,7 @@ def render_dict(members_dict: Dict[str, Any], indent: int = 0, depth=0, max_dept
     if isinstance(stack, list) and add_row:
         stack.append(partial(console.print, table))
         if members_dict.get("doc"):
-            stack.append(partial(console.print, f"[bold green]{members_dict.get("doc")}[/bold green]"))
+            stack.append(partial(console.print, f"[bold green]{members_dict.get('doc')}[/bold green]"))
         if members_dict.get("signature"):
             stack.append(partial(console.print, Syntax(members_dict.get("signature"), "python")))
         stack.append(partial(console.print, f"[bold blue]{title}:[/bold blue]"))

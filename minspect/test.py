@@ -44,8 +44,8 @@ class DetailsManager:
         self.markdown.append(f'{indent_space}</details>\n')
 
 def parse_input(input_str: str) -> List[str]:
-    """
-    Parses the input string and returns a list of access paths.
+    """Parses the input string and returns a list of access paths.
+
     Supports 'module:class.attr' and 'module.class.attr' syntax.
     """
     if ':' in input_str:
@@ -58,9 +58,7 @@ def parse_input(input_str: str) -> List[str]:
     return [module_part] + attr_part.split('.')
 
 def find_object(module, access_path: List[str]):
-    """
-    Traverses the module based on the access path and returns the target object.
-    """
+    """Traverses the module based on the access path and returns the target object."""
     current = module
     for part in access_path[1:]:
         if hasattr(current, part):
@@ -107,11 +105,10 @@ def process_object(obj, markdown: List[str], indent: int) -> List[str]:
     """Processes an object (class or function) and appends its Markdown representation."""
     if inspect.isclass(obj):
         return process_class(obj, indent)
-    elif inspect.isfunction(obj):
+    if inspect.isfunction(obj):
         return process_function(obj, indent)
-    else:
-        markdown.append("    - **Unsupported type:** Only classes and functions are supported.\n")
-        return markdown
+    markdown.append("    - **Unsupported type:** Only classes and functions are supported.\n")
+    return markdown
 
 def process_class(cls, indent: int) -> List[str]:
     """Processes a class object and returns its Markdown representation."""
@@ -159,20 +156,48 @@ def get_source_code(obj) -> Optional[str]:
     except Exception:
         return None
 
+def maybe_expand_dir(path: str) -> Path:
+    """Expands the user directory in a given path."""
+    try:
+        return Path(path).expanduser().resolve()
+    except FileNotFoundError:
+        try:
+            return Path(path).resolve()
+        except FileNotFoundError:
+            try:
+                return Path(path)
+            except FileNotFoundError:
+                return None
+
+def bfs_dir(dir: Path):
+    """Breadth-first search of a directory."""
+    queue = [dir]
+    while queue:
+        current = queue.pop(0)
+        yield current
+        if current.is_dir():
+            queue.extend(current.iterdir())
+            
+        
+
+    
 if __name__ == "__main__":
     import argparse
-    from mbpy.commands import run_cmd
     from importlib import reload
-    from minspect.source import _import_module
-    parser = argparse.ArgumentParser(description="Generate collapsed nested Markdown documentation for a Python module or specific attribute.")
-    parser.add_argument("module_name", help="Name of the Python module (e.g., 'math_operations')")
-    parser.add_argument("--access", help="Specific class or callable in the format 'module:Class.method' or 'module.Class.method'", default=None)
+
+    from mbpy.commands import run_cmd
+
+    from minspect.source import importmodule
+    parser = argparse.ArgumentParser(description="Generate collapsed nested Markdown documentation for a Specific class or callable in the format 'module:Class.method' or 'module.Class.method'")
+    parser.add_argument("path_module_or_package", help="Format 'path'/package.module:Class.method or package.module:Class.method")
 
     args = parser.parse_args()
+    obj = args.path_module_or_package
+    obj = dir.iterdir() if (dir := maybe_expand_dir(obj)) else [obj] # noqa: A001
 
+    
     try:
-        module = importlib.import_module(args.module_name)
-        module = _import_module(args.module_name)
+        module = importmodule(args.module_name)
     except ImportError:
       
         try:
