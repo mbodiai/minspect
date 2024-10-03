@@ -1,8 +1,8 @@
 import importlib
 import inspect
-from pathlib import Path
 import sys
 import unittest
+from pathlib import Path
 from typing import LiteralString
 
 

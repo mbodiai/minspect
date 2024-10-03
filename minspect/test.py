@@ -177,7 +177,7 @@ def bfs_dir(dir: Path):
         yield current
         if current.is_dir():
             queue.extend(current.iterdir())
-            
+    return
         
 
     
@@ -193,7 +193,8 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     obj = args.path_module_or_package
-    obj = dir.iterdir() if (dir := maybe_expand_dir(obj)) else [obj] # noqa: A001
+    obj = bfs_dir(dir) if (dir := maybe_expand_dir(obj)) else [obj] # noqa: A001
+    
 
     
     try:
