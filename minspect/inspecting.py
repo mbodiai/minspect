@@ -1,3 +1,4 @@
+import contextlib
 import importlib
 import importlib._bootstrap
 import importlib.util
@@ -11,14 +12,13 @@ from pkgutil import iter_modules
 from typing import Any, Dict, Literal
 
 import click
+from rich import inspect as rich_inspect
 from rich import print
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.pretty import pretty_repr as rich_repr
 from rich.syntax import Syntax
 from rich.table import Table
-from rich.pretty import pretty_repr as rich_repr
-from rich import inspect as rich_inspect
-import contextlib
 
 
 def load_all_modules(mod) -> list[tuple[str, Any]]:
