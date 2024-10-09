@@ -25,7 +25,9 @@ dependencies = [
   "click>=8.0.0",
   "mbpy>=1.11.5",
   "minspect",
+  "nltk>=3.9.1",
   "rich",
+  "rich-click>=1.8.3",
 ]
 
 [project.optional-dependencies]
@@ -120,6 +122,12 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.11.2",
+    "pydantic>=2.9.2",
+]
 
 [tool.uv.sources]
 minspect = { workspace = true }

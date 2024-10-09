@@ -29,10 +29,10 @@ from types import (
 )
 from typing import Optional, Union
 
-from minspect._internal import _isinstance, _main_module, _module_map, _namespace
 from minspect._internal import _locate_object as at
 from minspect._internal import _proxy_helper as reference
 from minspect.source import getmodule, getsource, indent
+from minspect.tree import _main_module, _module_map, _namespace
 
 try:
     import ctypes

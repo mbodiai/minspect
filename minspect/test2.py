@@ -38,9 +38,9 @@ def generate_html_like_markdown(module_name, max_depth=5) -> LiteralString:
                     function_signature = f"def {value.__name__}{inspect.signature(value)}"
                     markdown_output.append(f"{indent}<details><summary><b>{function_signature}</b></summary>\n")
                     function_doc = inspect.getdoc(value)
-                    if function_doc:
-                        markdown_output.append(f"{indent}<p>{function_doc}</p>\n")
-                    markdown_output.append(f"{indent}</details>\n")
+                    # if function_doc:
+                    #     markdown_output.append(f"{indent}<p>{function_doc}</p>\n")
+                    # markdown_output.append(f"{indent}</details>\n")
                 elif not sub_name.startswith("_"):
                     markdown_output.append(f"{indent}<li><b>{sub_name}:</b> {repr(value)}</li>\n")
             markdown_output.append(f"{indent}</details>\n")

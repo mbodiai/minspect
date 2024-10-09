@@ -4,7 +4,7 @@ import sys
 from ast import AST
 from inspect import getmodule, getsource, ismodule
 from types import ModuleType, SimpleNamespace
-from typing import dataclass_transform
+from typing import Callable, dataclass_transform
 
 from typing_extensions import Protocol, TypedDict
 
@@ -21,24 +21,34 @@ except ImportError:
     HAS_CTYPES = False
     IS_PYPY = False
 
-@dataclass_transform
+@dataclass_transform()
 class ModuleMap(TypedDict, total=False):
     by_name: dict[str, list[tuple[object, str]]]
     by_id: dict[int, list[tuple[object, str, str]]]
     top_level: dict[int, str]
 
+class Context(TypedDict, total=False):
+    ancestor_instructions: list[str]
+    instruction: str
+    notes: str
 
-class CTree(TypedDict, total=False):
+class SharedState(TypedDict, total=False):
+    instruction: str
+    shared_ctx: Context
+    
+
+class Tree(TypedDict, total=False):
     by_name: dict[str, list[tuple[object, str]]]
     by_id: dict[int, list[tuple[object, str, str]]]
     top_level: dict[int, str]
     modules: dict[str, ModuleType]
     classes: dict[str, type]
-    functions: dict[str, callable]
+    functions: dict[str, Callable]
     objects: dict[str, object]
     ast: dict[str, AST]
     source: dict[str, str]
-    ctx: dict[str, SimpleNamespace]
+    shared_state: SharedState
+    children_ctx: dict[str, Context]
     
 
 

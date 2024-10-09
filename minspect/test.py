@@ -2,18 +2,20 @@ import ast
 import gc
 import importlib
 import inspect
-from pathlib import Path
 import sys
 import time
 import traceback
+from pathlib import Path
+from pyclbr import readmodule, readmodule_ex
+from pydoc import getdoc, getpager, locate, pathdirs, splitdoc
 from typing import List, Optional
 
-visit = set()
+visit: set = set()
 def get_first_sentence(docstring: str) -> str:
     """Extracts the first sentence from a docstring."""
     if not docstring:
-        return "No description available."
-    return docstring.strip().split('.')[0] + '.'
+        return ""
+    return splitdoc(docstring)[0]
 
 def format_signature(obj) -> str:
     """Formats the signature of a class or function."""
@@ -25,9 +27,7 @@ def format_signature(obj) -> str:
     return ""
 
 class DetailsManager:
-    """
-    A context manager to handle <details> tags with proper indentation.
-    """
+    """A context manager to handle <details> tags with proper indentation."""
     def __init__(self, markdown: List[str], summary: str, indent: int = 0):
         self.markdown = markdown
         self.summary = summary
@@ -35,7 +35,7 @@ class DetailsManager:
 
     def __enter__(self):
         indent_space = '  ' * self.indent
-        self.markdown.append(f'{indent_space}<details>')
+        self.markdown.append(f'{indent_space}')
         self.markdown.append(f'{indent_space}  <summary>{self.summary}</summary>')
         return self
 
@@ -75,7 +75,7 @@ def generate_markdown(module_name: str, access_path: Optional[str] = None) -> st
         return f"**Error:** Module '{module_name}' could not be imported."
 
     module_doc = inspect.getdoc(module)
-    first_sentence = get_first_sentence(module_doc) if module_doc else "No module description available."
+    first_sentence = get_first_sentence(module_doc) if module_doc else ""
 
     markdown = []
     

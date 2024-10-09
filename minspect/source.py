@@ -14,11 +14,10 @@ from inspect import (
     ismodule,
     istraceback,
 )
-from pickle import dumps
 from tokenize import TokenError
 from types import ModuleType
 
-from minspect._internal import _namespace, getimport
+from minspect.source import _namespace, getimport
 
 
 def importmodule(import_name: str, safe=False):
